@@ -26,6 +26,63 @@
             z-index: 0;
         }
 
+        /* 音樂控制按鈕 */
+        .music-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.3);
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            cursor: pointer;
+            font-size: 1.4rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            color: white;
+        }
+
+        .music-toggle:hover {
+            background: rgba(255,255,255,0.2);
+            border-color: rgba(255,255,255,0.5);
+            transform: scale(1.1);
+        }
+
+        .music-toggle.playing .bar {
+            animation: barPulse 0.6s ease-in-out infinite alternate;
+        }
+
+        .music-toggle .bar {
+            display: inline-block;
+            width: 3px;
+            margin: 0 1px;
+            height: 16px;
+            background: white;
+            border-radius: 2px;
+            animation: barPulse 0.6s ease-in-out infinite alternate;
+        }
+
+        .music-toggle .bar:nth-child(1) { animation-delay: 0s; }
+        .music-toggle .bar:nth-child(2) { animation-delay: 0.15s; }
+        .music-toggle .bar:nth-child(3) { animation-delay: 0.3s; }
+        .music-toggle .bar:nth-child(4) { animation-delay: 0.45s; }
+
+        @keyframes barPulse {
+            from { height: 6px; }
+            to { height: 18px; }
+        }
+
+        .music-toggle.paused .bar {
+            animation: none;
+            height: 4px;
+            opacity: 0.4;
+        }
+
         .title-wrapper {
             position: relative;
             z-index: 1;
@@ -221,11 +278,35 @@
         @keyframes glowMove2 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-80px,-80px)} }
         @keyframes glowMove3 { 0%,100%{transform:translate(-50%,-50%) scale(1)} 50%{transform:translate(-50%,-50%) scale(1.5)} }
 
+        /* 音樂提示浮層 */
+        .music-hint {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 20px 40px;
+            border-radius: 16px;
+            font-size: 1.1rem;
+            z-index: 200;
+            animation: hintFade 3s ease forwards;
+            pointer-events: none;
+        }
+
+        @keyframes hintFade {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+            15% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            70% { opacity: 1; }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+        }
+
         @media (max-width: 500px) {
             .title { font-size: 2rem; }
             .nav-grid { gap: 15px; grid-template-columns: repeat(2, 1fr); }
             .nav-card { padding: 25px 15px; }
             .nav-card .emoji { font-size: 2.8rem; }
+            .music-toggle { width: 40px; height: 40px; font-size: 1.2rem; }
         }
     </style>
 </head>
@@ -234,6 +315,14 @@
     <div class="glow glow-1"></div>
     <div class="glow glow-2"></div>
     <div class="glow glow-3"></div>
+
+    <!-- 音樂控制按鈕 -->
+    <button class="music-toggle playing" id="musicBtn" onclick="toggleMusic()" title="背景音樂">
+        <span class="bar"></span>
+        <span class="bar"></span>
+        <span class="bar"></span>
+        <span class="bar"></span>
+    </button>
 
     <div class="title-wrapper">
         <h1 class="title">🦐 小蝦的網頁世界</h1>
@@ -270,6 +359,146 @@
     <div class="footer">Powered by 🦐 小蝦 & GitHub Pages</div>
 
     <script>
+    // ===== 科技風背景音樂 =====
+    let musicCtx = null;
+    let musicPlaying = false;
+    let musicLoopId = null;
+
+    function playTechLoop() {
+        if (!musicPlaying) return;
+        const ctx = musicCtx || new (window.AudioContext || window.webkitAudioContext)();
+        if (!musicCtx) musicCtx = ctx;
+        const now = ctx.currentTime;
+        const duration = 15;
+        const master = ctx.createGain();
+        master.gain.value = 0.12;
+        master.connect(ctx.destination);
+
+        // 深低音
+        const sub = ctx.createOscillator();
+        sub.type = 'sine';
+        sub.frequency.value = 55;
+        const subG = ctx.createGain();
+        subG.gain.setValueAtTime(0.5, now);
+        subG.gain.linearRampToValueAtTime(0, now + duration);
+        sub.connect(subG).connect(master);
+        sub.start(now);
+        sub.stop(now + duration);
+
+        // 脈衝合成
+        for (let i = 0; i < 16; i++) {
+            const t = now + i * (duration / 16);
+            const osc = ctx.createOscillator();
+            osc.type = 'square';
+            osc.frequency.value = 60 + Math.random() * 40;
+            const g = ctx.createGain();
+            g.gain.setValueAtTime(0, t);
+            g.gain.linearRampToValueAtTime(0.12, t + 0.05);
+            g.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+            osc.connect(g).connect(master);
+            osc.start(t);
+            osc.stop(t + 0.35);
+        }
+
+        // 琶音
+        const notes = [261.63, 329.63, 392.00, 523.25, 392.00, 329.63, 261.63, 196.00];
+        const step = duration / (notes.length * 2);
+        notes.forEach((freq, i) => {
+            notes.forEach((f, j) => {
+                const t = now + i * step + j * step * 0.5;
+                if (t >= now + duration) return;
+                const osc = ctx.createOscillator();
+                osc.type = 'sawtooth';
+                osc.frequency.value = f * 2;
+                const g = ctx.createGain();
+                g.gain.setValueAtTime(0, t);
+                g.gain.linearRampToValueAtTime(0.03, t + 0.01);
+                g.gain.exponentialRampToValueAtTime(0.001, t + step * 0.45);
+                osc.connect(g).connect(master);
+                osc.start(t);
+                osc.stop(t + step * 0.5);
+            });
+        });
+
+        // Glitch 音效
+        for (let i = 0; i < 8; i++) {
+            const t = now + Math.random() * duration;
+            const bufSize = ctx.sampleRate * 0.1;
+            const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+            const data = buf.getChannelData(0);
+            for (let s = 0; s < bufSize; s++) data[s] = (Math.random() * 2 - 1) * 0.3;
+            const noise = ctx.createBufferSource();
+            noise.buffer = buf;
+            const g = ctx.createGain();
+            g.gain.setValueAtTime(0, t);
+            g.gain.linearRampToValueAtTime(0.08, t + 0.01);
+            g.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+            noise.connect(g).connect(master);
+            noise.start(t);
+        }
+
+        // Pad
+        const pad = ctx.createOscillator();
+        pad.type = 'triangle';
+        pad.frequency.value = 130.81;
+        const padG = ctx.createGain();
+        padG.gain.setValueAtTime(0, now);
+        padG.gain.linearRampToValueAtTime(0.06, now + 2);
+        padG.gain.setValueAtTime(0.06, now + duration - 3);
+        padG.gain.linearRampToValueAtTime(0, now + duration);
+        const lfo = ctx.createOscillator();
+        lfo.frequency.value = 0.3;
+        const lfoG = ctx.createGain();
+        lfoG.gain.value = 50;
+        lfo.connect(lfoG).connect(pad.frequency);
+        pad.connect(padG).connect(master);
+        pad.start(now);
+        pad.stop(now + duration);
+        lfo.start(now);
+        lfo.stop(now + duration);
+
+        // 15秒後循環
+        musicLoopId = setTimeout(playTechLoop, duration * 1000);
+    }
+
+    function toggleMusic() {
+        const btn = document.getElementById('musicBtn');
+        if (!musicPlaying) {
+            // 啟動音樂
+            if (!musicCtx) musicCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (musicCtx.state === 'suspended') musicCtx.resume();
+            musicPlaying = true;
+            btn.classList.remove('paused');
+            btn.classList.add('playing');
+            playTechLoop();
+        } else {
+            // 暫停音樂
+            musicPlaying = false;
+            if (musicCtx) musicCtx.suspend();
+            clearTimeout(musicLoopId);
+            btn.classList.remove('playing');
+            btn.classList.add('paused');
+        }
+    }
+
+    // 初始化音樂按鈕狀態
+    document.getElementById('musicBtn').classList.add('paused');
+
+    // 首次點擊頁面啟動音樂
+    document.addEventListener('click', function initMusic() {
+        if (!musicPlaying) {
+            toggleMusic();
+            // 顯示提示
+            const hint = document.createElement('div');
+            hint.className = 'music-hint';
+            hint.textContent = '🎵 音樂播放中 · 右上角按鈕可控制';
+            document.body.appendChild(hint);
+            setTimeout(() => hint.remove(), 3000);
+        }
+        document.removeEventListener('click', initMusic);
+    });
+
+    // ===== 粒子背景 =====
     const canvas = document.getElementById('particles');
     const ctx = canvas.getContext('2d');
     let particles = [];
