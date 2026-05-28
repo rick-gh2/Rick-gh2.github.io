@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>瘋狂章魚燒 🐙 Crazy Takoyaki</title>
+    <style>
+        /* 針對手機全面優化，防止亂縮放與滾動 */
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #fceade;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        /* 計分板 */
+        .header {
+            width: 100%;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #e76f51;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        /* 烤盤遊戲區 */
+        .game-board {
+            flex: 1;
+            width: 100%;
+            max-width: 500px;
+            position: relative;
+            background-color: #3d3d3d; /* 鐵板顏色 */
+            background-image: radial-gradient(#2b2b2b 20%, transparent 20%),
+                              radial-gradient(#2b2b2b 20%, transparent 20%);
+            background-size: 60px 60px;
+            background-position: 0 0, 30px 30px;
+            overflow: hidden;
+        }
+        /* 章魚燒本體 */
+        .tako {
+            position: absolute;
+            width: 65px;
+            height: 65px;
+            border-radius: 50%;
+            font-size: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            animation: popUp 0.2s ease-out;
+            /* 防止手機點擊時出現藍色高亮框 */
+            -webkit-tap-highlight-color: transparent; 
+        }
+        @keyframes popUp {
+            0% { transform: scale(0); }
+            100% { transform: scale(1); }
+        }
+        /* 結束畫面彈窗 */
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            color: white;
+            z-index: 1000;
+        }
+        .overlay h2 { font-size: 36px; margin-bottom: 10px; color: #f4a261; }
+        .overlay p { font-size: 22px; margin-bottom: 20px; }
+        .btn {
+            background-color: #e76f51;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 20px;
+            border-radius: 30px;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div>分數: <span id="score">0</span></div>
+        <div>時間: <span id="time">30</span>s</div>
+    </div>
+
+    <div class="game-board" id="board">
+        </div>
+
+    <div class="overlay" id="gameOver">
+        <h2>攤位打烊啦！</h2>
+        <p>總共烤了 <span id="finalScore">0</span> 個完美章魚燒！</p>
+        <button class="btn" onclick="startGame()">再烤一盤</button>
+    </div>
+
+    <script>
+        const board = document.getElementById('board');
+        const scoreEl = document.getElementById('score');
+        const timeEl = document.getElementById('time');
+        const gameOverEl = document.getElementById('gameOver');
+        const finalScoreEl = document.getElementById('finalScore');
+
+        let score = 0;
+        let timeLeft = 30;
+        let gameInterval;
+        let spawnInterval;
+        
+        // 各種章魚燒的類型：[表情, 分數變更, 是不是炸彈]
+        const takoTypes = [
+            { icon: '🟡', score: 1 },  // 普通麵糊
+            { icon: '🟠', score: 2 },  // 金黃熟透 (高分!)
+            { icon: '🐙', score: 3 },  // 抓到整隻大章魚 (超高分!)
+            { icon: '⚫', score: -2 }  // 烤焦的黑炭 (扣分陷阱!)
+        ];
+
+        function startGame() {
+            // 初始化數據
+            score = 0;
+            timeLeft = 30;
+            scoreEl.textContent = score;
+            timeEl.textContent = timeLeft;
+            board.innerHTML = '';
+            gameOverEl.style.display = 'none';
+
+            // 開始倒數計時
+            gameInterval = setInterval(() => {
+                timeLeft--;
+                timeEl.textContent = timeLeft;
+                if (timeLeft <= 0) {
+                    endGame();
+                }
+            }, 1000);
+
+            // 開始生成章魚燒 (每 500 毫秒出一顆，速度很快喔！)
+            spawnInterval = setInterval(spawnTako, 500);
+        }
+
+        function spawnTako() {
+            if (timeLeft <= 0) return;
+
+            const tako = document.createElement('div');
+            tako.classList.add('tako');
+
+            // 隨機決定這次出現哪種章魚燒 (高機率普通，低機率大章魚或烤焦)
+            const randomType = takoTypes[Math.floor(Math.random() * takoTypes.length)];
+            tako.innerHTML = randomType.icon;
+            
+            // 計算手機螢幕範圍內的隨機位置
+            const padding = 20;
+            const maxX = board.clientWidth - 70;
+            const maxY = board.clientHeight - 70;
+            tako.style.left = Math.floor(Math.random() * (maxX - padding) + padding) + 'px';
+            tako.style.top = Math.floor(Math.random() * (maxY - padding) + padding) + 'px';
+
+            // 綁定手機觸控與點擊事件（touchstart 讓手機一摸到就得分，反應更靈敏）
+            const handleHit = (e) => {
+                e.preventDefault();
+                score += randomType.score;
+                if (score < 0) score = 0; // 分數不為負
+                scoreEl.textContent = score;
+                
+                // 消失動畫特效
+                tako.style.transform = 'scale(1.4)';
+                tako.style.opacity = '0';
+                tako.style.transition = 'all 0.1s ease';
+                setTimeout(() => tako.remove(), 100);
+            };
+
+            tako.addEventListener('touchstart', handleHit);
+            tako.addEventListener('mousedown', handleHit);
+
+            board.appendChild(tako);
+
+            // 如果玩家都沒點，1.2 秒後章魚燒會自己冷掉消失
+            setTimeout(() => {
+                if (tako.parentNode) {
+                    tako.remove();
+                }
+            }, 1200);
+        }
+
+        function endGame() {
+            clearInterval(gameInterval);
+            clearInterval(spawnInterval);
+            finalScoreEl.textContent = score;
+            gameOverEl.style.display = 'flex';
+        }
+
+        // 自動啟動遊戲
+        window.onload = startGame;
+    </script>
+</body>
+</html>
