@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🐶 對不起，請原諒我！</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Microsoft JhengHei', 'Arial', sans-serif;
+            background: linear-gradient(135deg, #ffeef2, #fff0f5, #ffe4e8);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* 漂浮小狗 */
+        .dog-bg {
+            position: fixed;
+            font-size: 2rem;
+            opacity: 0.15;
+            animation: floatDog 8s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes floatDog {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-30px) rotate(10deg); }
+        }
+
+        .container {
+            text-align: center;
+            z-index: 1;
+            padding: 20px;
+        }
+
+        /* 道歉小狗 */
+        .sorry-dog {
+            width: 180px;
+            height: 180px;
+            margin: 0 auto 20px;
+            position: relative;
+            animation: dogBow 2s ease-in-out infinite;
+        }
+
+        @keyframes dogBow {
+            0%, 100% { transform: rotate(-5deg); }
+            50% { transform: rotate(5deg); }
+        }
+
+        /* 小狗臉部 SVG */
+        .dog-face {
+            width: 180px;
+            height: 180px;
+            background: #FFD93D;
+            border-radius: 50%;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .dog-ear {
+            width: 50px;
+            height: 70px;
+            background: #F4C75D;
+            border-radius: 50%;
+            position: absolute;
+            top: -15px;
+        }
+        .dog-ear.left { left: 10px; transform: rotate(-20deg); }
+        .dog-ear.right { right: 10px; transform: rotate(20deg); }
+
+        .dog-eye {
+            width: 16px;
+            height: 18px;
+            background: #333;
+            border-radius: 50%;
+            position: absolute;
+            top: 55px;
+        }
+        .dog-eye::after {
+            content: '';
+            width: 5px;
+            height: 5px;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+            top: 3px;
+            right: 3px;
+        }
+        .dog-eye.left { left: 45px; }
+        .dog-eye.right { right: 45px; }
+
+        /* 淚水 */
+        .tear {
+            width: 8px;
+            height: 12px;
+            background: #87CEEB;
+            border-radius: 0 0 50% 50%;
+            position: absolute;
+            top: 72px;
+            animation: tearDrop 1.5s ease-in-out infinite;
+        }
+        .tear.left { left: 50px; animation-delay: 0s; }
+        .tear.right { right: 50px; animation-delay: 0.75s; }
+
+        @keyframes tearDrop {
+            0% { opacity: 0; transform: translateY(0); }
+            50% { opacity: 1; transform: translateY(10px); }
+            100% { opacity: 0; transform: translateY(20px); }
+        }
+
+        .dog-nose {
+            width: 20px;
+            height: 15px;
+            background: #333;
+            border-radius: 50%;
+            position: absolute;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .dog-mouth {
+            width: 60px;
+            height: 30px;
+            border: 3px solid #333;
+            border-top: none;
+            border-radius: 0 0 60px 60px;
+            position: absolute;
+            top: 95px;
+            left: 50%;
+            transform: translateX(-50%);
+            animation: sadMouth 2s ease-in-out infinite;
+        }
+
+        @keyframes sadMouth {
+            0%, 100% { height: 30px; }
+            50% { height: 35px; }
+        }
+
+        .dog-tongue {
+            width: 14px;
+            height: 10px;
+            background: #FF6B8A;
+            border-radius: 0 0 10px 10px;
+            position: absolute;
+            top: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            animation: tongueOut 2s ease-in-out infinite;
+        }
+
+        @keyframes tongueOut {
+            0%, 40%, 100% { transform: translateX(-50%) translateY(0); opacity: 0; }
+            50% { transform: translateX(-50%) translateY(5px); opacity: 1; }
+        }
+
+        .dog-paws {
+            width: 130px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            position: relative;
+            top: -10px;
+        }
+
+        .dog-paw {
+            width: 35px;
+            height: 45px;
+            background: #F4C75D;
+            border-radius: 50% 50% 40% 40%;
+            animation: pawReach 2s ease-in-out infinite;
+        }
+        .dog-paw.left { transform: rotate(15deg); }
+        .dog-paw.right { transform: rotate(-15deg); }
+
+        @keyframes pawReach {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        .title {
+            font-size: 2.2rem;
+            color: #e74c3c;
+            margin-bottom: 10px;
+            animation: titlePulse 2s ease-in-out infinite;
+        }
+
+        @keyframes titlePulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+        }
+
+        .subtitle {
+            color: #888;
+            font-size: 1rem;
+            margin-bottom: 30px;
+        }
+
+        /* 道歉信 */
+        .letter {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            max-width: 350px;
+            margin: 0 auto 30px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+            border-left: 4px solid #e74c3c;
+            text-align: left;
+            line-height: 1.8;
+            color: #555;
+            font-size: 0.95rem;
+        }
+
+        .letter .sign {
+            text-align: right;
+            color: #e74c3c;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        /* 原諒按鈕 */
+        .forgive-btn {
+            background: linear-gradient(135deg, #ff6b81, #ff4757);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            padding: 16px 50px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(255,71,87,0.3);
+            animation: btnPulse 1.5s ease-in-out infinite;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .forgive-btn::before {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shine 2s infinite;
+        }
+
+        @keyframes shine {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .forgive-btn:hover {
+            transform: scale(1.08);
+            box-shadow: 0 12px 35px rgba(255,71,87,0.4);
+        }
+
+        @keyframes btnPulse {
+            0%, 100% { box-shadow: 0 8px 25px rgba(255,71,87,0.3); }
+            50% { box-shadow: 0 8px 35px rgba(255,71,87,0.5); }
+        }
+
+        /* 愛心爆發效果 */
+        .heart-burst {
+            position: fixed;
+            font-size: 2rem;
+            pointer-events: none;
+            z-index: 100;
+            animation: heartBurst 1.5s ease forwards;
+        }
+
+        @keyframes heartBurst {
+            0% { transform: scale(0); opacity: 1; }
+            50% { transform: scale(1.5); opacity: 1; }
+            100% { transform: scale(0) translateY(-200px); opacity: 0; }
+        }
+
+        /* 完成訊息 */
+        .success-msg {
+            display: none;
+            text-align: center;
+            animation: fadeInUp 0.5s ease;
+        }
+
+        .success-msg .emoji {
+            font-size: 4rem;
+            display: block;
+            margin-bottom: 15px;
+        }
+
+        .success-msg .text {
+            font-size: 1.5rem;
+            color: #2ecc71;
+            font-weight: bold;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #e74c3c;
+            text-decoration: none;
+            font-weight: bold;
+            transition: color 0.2s;
+        }
+        .back-link:hover { color: #c0392b; }
+
+        @media (max-width: 500px) {
+            .title { font-size: 1.8rem; }
+            .letter { padding: 15px; font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+    <!-- 背景漂浮小狗 -->
+    <div class="dog-bg" style="top:10%;left:5%;animation-delay:0s">🐶</div>
+    <div class="dog-bg" style="top:25%;right:8%;animation-delay:1s">🐕</div>
+    <div class="dog-bg" style="top:55%;left:3%;animation-delay:2s">🐾</div>
+    <div class="dog-bg" style="top:75%;right:5%;animation-delay:3s">🐶</div>
+    <div class="dog-bg" style="top:40%;left:85%;animation-delay:1.5s">🐕</div>
+
+    <div class="container">
+        <div class="sorry-dog">
+            <div class="dog-face">
+                <div class="dog-ear left"></div>
+                <div class="dog-ear right"></div>
+                <div class="dog-eye left"></div>
+                <div class="dog-eye right"></div>
+                <div class="tear left"></div>
+                <div class="tear right"></div>
+                <div class="dog-nose"></div>
+                <div class="dog-mouth"></div>
+                <div class="dog-tongue"></div>
+            </div>
+            <div class="dog-paws">
+                <div class="dog-paw left"></div>
+                <div class="dog-paw right"></div>
+            </div>
+        </div>
+
+        <h1 class="title">🐶 對不起！</h1>
+        <p class="subtitle">小狗狗知道自己錯了...</p>
+
+        <div class="letter">
+            親愛的人：
+            <br><br>
+            我知道我做錯了事，真的很抱歉。
+            每天想著你生氣的樣子，心裡就好難過。
+            <br><br>
+            我保證以後會更好，不要再讓我失望好嗎？
+            原諒我這次吧～🥺
+            <div class="sign">—— 愛你的小狗狗 🐾</div>
+        </div>
+
+        <button class="forgive-btn" onclick="forgive()">
+            💖 我原諒你
+        </button>
+
+        <div class="success-msg" id="successMsg">
+            <span class="emoji">🎉💕🐶</span>
+            <div class="text">太開心了！謝謝你原諒我！</div>
+            <div style="margin-top:10px;color:#aaa;font-size:0.9rem;">
+                我會永遠愛你～ 💖<br>
+                <a href="index.html" class="back-link">← 回到導航首頁</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    function forgive() {
+        // 愛心爆發
+        const hearts = ['💖','💕','💗','💓','💝','🥰','😻','🐶','🐾','✨'];
+        for (let i = 0; i < 40; i++) {
+            setTimeout(() => {
+                const heart = document.createElement('div');
+                heart.className = 'heart-burst';
+                heart.textContent = hearts[Math.floor(Math.random() * hearts.length)];
+                heart.style.left = Math.random() * window.innerWidth + 'px';
+                heart.style.top = window.innerHeight + 'px';
+                heart.style.fontSize = (Math.random() * 2 + 1.5) + 'rem';
+                document.body.appendChild(heart);
+                setTimeout(() => heart.remove(), 1500);
+            }, Math.random() * 1000);
+        }
+
+        // 顯示成功訊息
+        document.querySelector('.sorry-dog').style.display = 'none';
+        document.querySelector('.title').style.display = 'none';
+        document.querySelector('.subtitle').style.display = 'none';
+        document.querySelector('.letter').style.display = 'none';
+        document.querySelector('.forgive-btn').style.display = 'none';
+        document.querySelector('.dog-bg').forEach(el => el.style.display = 'none');
+        document.getElementById('successMsg').style.display = 'block';
+    }
+    </script>
+</body>
+</html>
