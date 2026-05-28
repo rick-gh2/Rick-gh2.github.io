@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>有一個重要的邀請給你 ✨</title>
+    <style>
+        body {
+            font-family: 'Microsoft JhengHei', sans-serif;
+            background-color: #ffe6e6;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+        .container {
+            text-align: center;
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            max-width: 450px;
+            width: 85%;
+            position: relative;
+        }
+        h1 {
+            color: #ff4d6d;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        p {
+            color: #555;
+            font-size: 18px;
+            line-height: 1.6;
+        }
+        .buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 30px;
+            position: relative;
+            height: 50px;
+        }
+        button {
+            padding: 12px 35px;
+            font-size: 18px;
+            font-weight: bold;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: transform 0.1s ease;
+        }
+        #yesBtn {
+            background-color: #ff4d6d;
+            color: white;
+        }
+        #yesBtn:hover {
+            transform: scale(1.1);
+            background-color: #ff1a43;
+        }
+        #noBtn {
+            background-color: #aaa;
+            color: white;
+            position: absolute;
+            z-index: 999; 
+            /* 讓逃跑時有一點點平滑的視覺感，但消失時會被 JS 覆蓋 */
+            transition: left 0.15s ease, top 0.15s ease, opacity 0.1s ease; 
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="quizBox">
+        <h1>✨ 誠摯的約會邀請 ✨</h1>
+        <p>這週末有空一起去喝杯咖啡、吃個甜點嗎？<br>（聽說那家店的草莓蛋糕超厲害！）</p>
+        
+        <div class="buttons">
+            <button id="yesBtn" onclick="celebrate()">YES</button>
+            <button id="noBtn" 
+                    onmouseover="moveButton()" 
+                    ontouchstart="vanishAndMove(event)" 
+                    onclick="vanishAndMove(event)">NO</button>
+        </div>
+    </div>
+
+    <script>
+        // 核心計算：讓按鈕隨機跑到螢幕上安全的位置
+        function getTargetPosition(element) {
+            const padding = 40;
+            const maxX = window.innerWidth - element.offsetWidth - padding;
+            const maxY = window.innerHeight - element.offsetHeight - padding;
+            
+            const randomX = Math.max(padding, Math.floor(Math.random() * maxX));
+            const randomY = Math.max(padding, Math.floor(Math.random() * maxY));
+            
+            return { x: randomX, y: randomY };
+        }
+
+        // 1. 正常的滑鼠移過（Hover）逃跑機制
+        function moveButton() {
+            const noBtn = document.getElementById('noBtn');
+            const pos = getTargetPosition(noBtn);
+            
+            noBtn.style.position = 'fixed';
+            noBtn.style.left = pos.x + 'px';
+            noBtn.style.top = pos.y + 'px';
+        }
+
+        // 2. 升級版：被點擊或手機按到時「消失」並瞬移
+        function vanishAndMove(event) {
+            if (event) {
+                event.preventDefault(); // 阻止按鈕預設被選取或點擊行為
+            }
+            
+            const noBtn = document.getElementById('noBtn');
+            
+            // 瞬間變透明（消失）
+            noBtn.style.transition = 'none'; // 關閉動畫，讓消失跟瞬移在背景悄悄完成
+            noBtn.style.opacity = '0';
+            
+            // 計算新位置
+            const pos = getTargetPosition(noBtn);
+            noBtn.style.position = 'fixed';
+            noBtn.style.left = pos.x + 'px';
+            noBtn.style.top = pos.y + 'px';
+            
+            // 延遲 0.4 秒後重新現形（重新出現出現在別的地方）
+            setTimeout(() => {
+                noBtn.style.transition = 'left 0.15s ease, top 0.15s ease, opacity 0.2s ease';
+                noBtn.style.opacity = '1';
+            }, 400);
+        }
+
+        // 點擊「YES」之後的驚喜
+        function celebrate() {
+            const box = document.getElementById('quizBox');
+            box.innerHTML = `
+                <h1 style="font-size: 40px;">🎉 太棒了！ 🎉</h1>
+                <p style="font-size: 20px; color: #ff4d6d; font-weight: bold;">那就這麼約定囉！</p>
+                <p>我晚點把時間地點傳給你，<br>期待當天見面！❤️</p>
+            `;
+            
+            for (let i = 0; i < 50; i++) {
+                createHeart();
+            }
+        }
+
+        function createHeart() {
+            const heart = document.createElement('div');
+            heart.innerHTML = '❤️';
+            heart.style.position = 'fixed';
+            heart.style.left = Math.random() * 100 + 'vw';
+            heart.style.top = '-20px';
+            heart.style.fontSize = (Math.random() * 20 + 10) + 'px';
+            heart.style.animation = `fall ${Math.random() * 3 + 2}s linear forwards`;
+            
+            document.body.appendChild(heart);
+            
+            setTimeout(() => {
+                heart.remove();
+            }, 5000);
+        }
+    </script>
+
+    <style>
+        @keyframes fall {
+            to {
+                transform: translateY(105vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+    </style>
+</body>
+</html>

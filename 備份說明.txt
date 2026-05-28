@@ -1,0 +1,12 @@
+# 個人網頁備份
+最後備份時間: 2026/05/28
+倉庫: rick-gh2/rick-gh2.github.io
+網址: https://rick-gh2.github.io
+
+檔案清單:
+- index.html (導航首頁)
+- date.html (約會邀請頁)
+- space.html (星戰遊戲)
+- takoyaki.html (章魚燒遊戲)
+- guestbook.html (小蝦留言板)
+- README.md (倉庫說明)
