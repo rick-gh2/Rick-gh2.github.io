@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>星戰異星戰機 ✨ Star Strike</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #03030c;
+            font-family: 'Arial', sans-serif;
+        }
+        /* 遊戲畫布 */
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        /* UI 介面（分數與血條） */
+        #ui {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            right: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #fff;
+            font-size: 18px;
+            font-weight: bold;
+            text-shadow: 0 0 8px #00f0ff;
+            pointer-events: none; /* 讓點擊穿透 UI */
+            z-index: 10;
+        }
+        .hp-bar-container {
+            width: 120px;
+            height: 12px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 6px;
+            border: 1px solid #00f0ff;
+            overflow: hidden;
+            box-shadow: 0 0 10px rgba(0,240,255,0.5);
+        }
+        #hp-bar {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, #00f0ff, #00ff66);
+            transition: width 0.1s ease;
+        }
+        /* 開始與結束畫面彈窗 */
+        .screen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(5, 5, 20, 0.85);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            z-index: 100;
+            backdrop-filter: blur(5px);
+            transition: opacity 0.3s ease;
+        }
+        .screen h1 {
+            font-size: 32px;
+            color: #00f0ff;
+            text-shadow: 0 0 20px #00f0ff;
+            margin-bottom: 5px;
+            letter-spacing: 2px;
+        }
+        .screen p {
+            color: #8fa0af;
+            font-size: 16px;
+            margin-bottom: 30px;
+            text-align: center;
+            padding: 0 20px;
+        }
+        .btn {
+            background: linear-gradient(45deg, #0055ff, #00f0ff);
+            color: white;
+            border: none;
+            padding: 14px 40px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 25px;
+            box-shadow: 0 0 15px #00f0ff;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="ui">
+        <div>SCORE: <span id="score">0</span></div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <span>HP</span>
+            <div class="hp-bar-container"><div id="hp-bar"></div></div>
+        </div>
+    </div>
+
+    <div id="start-screen" class="screen">
+        <h1>STAR STRIKE</h1>
+        <p>⚠️ 異星敵機來襲！在螢幕上拖曳戰機展開反擊！</p>
+        <button class="btn" onclick="initGame()">啟動戰機</button>
+    </div>
+
+    <div id="game-over-screen" class="screen" style="display: none;">
+        <h1 style="color: #ff0055; text-shadow: 0 0 20px #ff0055;">戰機墜毀</h1>
+        <p>防線失守... 你的最終得分：<span id="final-score" style="color:#00f0ff; font-weight:bold;">0</span></p>
+        <button class="btn" style="background: linear-gradient(45deg, #ff0055, #ff7700); box-shadow: 0 0 15px #ff0055;" onclick="initGame()">重新出擊</button>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // UI 元素
+        const scoreEl = document.getElementById('score');
+        const hpBar = document.getElementById('hp-bar');
+        const startScreen = document.getElementById('start-screen');
+        const gameOverScreen = document.getElementById('game-over-screen');
+        const finalScoreEl = document.getElementById('final-score');
+
+        // 調整畫布尺寸適應手機
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // 遊戲狀態變數
+        let gameActive = false;
+        let score = 0;
+        let player;
+        let bullets = [];
+        let enemies = [];
+        let particles = [];
+        let stars = [];
+        let lastSpawnTime = 0;
+        let spawnInterval = 1000; // 敵機生成速度(ms)
+        let lastShootTime = 0;
+        let shootInterval = 180; // 子彈射速(ms)
+
+        // 初始化背景背景星空
+        function createStars() {
+            stars = [];
+            for (let i = 0; i < 60; i++) {
+                stars.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    size: Math.random() * 2,
+                    speed: Math.random() * 2 + 0.5
+                });
+            }
+        }
+
+        // 粒子特效物件
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.size = Math.random() * 3 + 1;
+                this.speedX = (Math.random() - 0.5) * 6;
+                this.speedY = (Math.random() - 0.5) * 6;
+                this.alpha = 1;
+                this.decay = Math.random() * 0.02 + 0.015;
+            }
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                this.alpha -= this.decay;
+            }
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.fillStyle = this.color;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        // 玩家戰機物件
+        class Player {
+            constructor() {
+                this.width = 45;
+                this.height = 45;
+                this.x = canvas.width / 2;
+                this.y = canvas.height * 0.8;
+                this.hp = 100;
+                this.targetX = this.x;
+                this.targetY = this.y;
+            }
+            update() {
+                // 平滑跟隨手指/滑鼠
+                this.x += (this.targetX - this.x) * 0.3;
+                this.y += (this.targetY - this.y) * 0.3;
+                
+                // 邊界限制
+                if (this.x < this.width) this.x = this.width;
+                if (this.x > canvas.width - this.width) this.x = canvas.width - this.width;
+                if (this.y < this.height) this.y = this.height;
+                if (this.y > canvas.height - this.height) this.y = canvas.height - this.height;
+            }
+            draw() {
+                ctx.save();
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = '#00f0ff';
+                
+                // 繪製前衛科技感三角形戰機
+                ctx.fillStyle = '#00f0ff';
+                ctx.beginPath();
+                ctx.moveTo(this.x, this.y - this.height / 1.2); // 機頭
+                ctx.lineTo(this.x - this.width, this.y + this.height / 2); // 左翼
+                ctx.lineTo(this.x, this.y + this.height / 4); // 機尾內縮
+                ctx.lineTo(this.x + this.width, this.y + this.height / 2); // 右翼
+                ctx.closePath();
+                ctx.fill();
+
+                // 機身核心能量燈
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y - 2, 5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        // 子彈物件
+        class Bullet {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.radius = 4;
+                this.speed = 12;
+            }
+            update() { this.y -= this.speed; }
+            draw() {
+                ctx.save();
+                ctx.shadowBlur = 12;
+                ctx.shadowColor = '#00ff66';
+                ctx.fillStyle = '#00ff66';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        // 敵機物件
+        class Enemy {
+            constructor() {
+                this.width = Math.random() * 20 + 25;
+                this.height = this.width;
+                this.x = Math.random() * (canvas.width - this.width * 2) + this.width;
+                this.y = -this.height;
+                this.speed = Math.random() * 2 + 2 + (score * 0.05); // 隨分數提高速度
+                this.color = ['#ff0055', '#ff7700', '#ff00aa'][Math.floor(Math.random() * 3)];
+            }
+            update() { this.y += this.speed; }
+            draw() {
+                ctx.save();
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = this.color;
+                ctx.fillStyle = this.color;
+                
+                // 繪製菱形異星敵機
+                ctx.beginPath();
+                ctx.moveTo(this.x, this.y + this.height);
+                ctx.lineTo(this.x - this.width, this.y);
+                ctx.lineTo(this.x, this.y - this.height / 2);
+                ctx.lineTo(this.x + this.width, this.y);
+                ctx.closePath();
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        // 初始化/重置遊戲
+        function initGame() {
+            score = 0;
+            bullets = [];
+            enemies = [];
+            particles = [];
+            scoreEl.textContent = score;
+            hpBar.style.width = '100%';
+            
+            player = new Player();
+            createStars();
+            
+            startScreen.style.display = 'none';
+            gameOverScreen.style.display = 'none';
+            gameActive = true;
+            
+            lastSpawnTime = performance.now();
+            animate();
+        }
+
+        // 觸控與滑鼠操作事件
+        function handleMove(e) {
+            if (!gameActive) return;
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            player.targetX = clientX;
+            // 讓飛機稍微在手指上方，避免被手指完全遮擋
+            player.targetY = clientY - 30; 
+        }
+
+        window.addEventListener('mousemove', handleMove);
+        window.addEventListener('touchmove', handleMove, { passive: false });
+        window.addEventListener('touchstart', (e) => {
+            handleMove(e);
+        }, { passive: false });
+
+        // 遊戲主迴圈
+        function animate(currentTime) {
+            if (!gameActive) return;
+            requestAnimationFrame(animate);
+
+            // 清空畫布（帶有一點點黑透明，製造拖尾流暢殘影效果）
+            ctx.fillStyle = 'rgba(3, 3, 12, 0.3)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 1. 繪製並更新星空背景
+            stars.forEach(star => {
+                star.y += star.speed;
+                if (star.y > canvas.height) {
+                    star.y = 0;
+                    star.x = Math.random() * canvas.width;
+                }
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+                ctx.fillRect(star.x, star.y, star.size, star.size);
+            });
+
+            // 2. 更新玩家戰機
+            player.update();
+            player.draw();
+
+            // 3. 自動發射子彈
+            if (currentTime - lastShootTime > shootInterval) {
+                bullets.push(new Bullet(player.x, player.y - player.height / 2));
+                lastShootTime = currentTime;
+            }
+
+            // 4. 更新與碰撞檢測：子彈
+            for (let b = bullets.length - 1; b >= 0; b--) {
+                bullets[b].update();
+                bullets[b].draw();
+
+                // 超出螢幕移除
+                if (bullets[b].y < 0) {
+                    bullets.splice(b, 1);
+                    continue;
+                }
+
+                // 檢測是否擊中敵機
+                for (let e = enemies.length - 1; e >= 0; e--) {
+                    let dist = Math.hypot(bullets[b].x - enemies[e].x, bullets[b].y - enemies[e].y);
+                    if (dist < enemies[e].width + bullets[b].radius) {
+                        // 產生爆炸粒子
+                        for (let i = 0; i < 12; i++) {
+                            particles.push(new Particle(enemies[e].x, enemies[e].y, enemies[e].color));
+                        }
+                        
+                        enemies.splice(e, 1);
+                        bullets.splice(b, 1);
+                        score += 10;
+                        scoreEl.textContent = score;
+                        break;
+                    }
+                }
+            }
+
+            // 5. 生成敵機
+            if (currentTime - lastSpawnTime > spawnInterval) {
+                enemies.push(new Enemy());
+                lastSpawnTime = currentTime;
+                // 隨著分數變高，生成速度稍微加快
+                spawnInterval = Math.max(400, 1000 - score * 2);
+            }
+
+            // 6. 更新與碰撞檢測：敵機
+            for (let e = enemies.length - 1; e >= 0; e--) {
+                enemies[e].update();
+                enemies[e].draw();
+
+                // 敵機飛過底部
+                if (enemies[e].y > canvas.height + enemies[e].height) {
+                    enemies.splice(e, 1);
+                    player.hp -= 10; // 漏掉敵機扣血
+                    updateHpBar();
+                    continue;
+                }
+
+                // 敵機撞擊玩家戰機
+                let distToPlayer = Math.hypot(enemies[e].x - player.x, enemies[e].y - player.y);
+                if (distToPlayer < enemies[e].width + player.width / 2) {
+                    // 撞擊粒子
+                    for (let i = 0; i < 15; i++) {
+                        particles.push(new Particle(enemies[e].x, enemies[e].y, '#ff0000'));
+                    }
+                    enemies.splice(e, 1);
+                    player.hp -= 20; // 撞擊大扣血
+                    updateHpBar();
+                }
+            }
+
+            // 7. 更新粒子特效
+            for (let p = particles.length - 1; p >= 0; p--) {
+                particles[p].update();
+                particles[p].draw();
+                if (particles[p].alpha <= 0) {
+                    particles.splice(p, 1);
+                }
+            }
+        }
+
+        // 更新血條 UI 與檢查死亡
+        function updateHpBar() {
+            if (player.hp < 0) player.hp = 0;
+            hpBar.style.width = player.hp + '%';
+            
+            if (player.hp <= 0) {
+                gameActive = false;
+                finalScoreEl.textContent = score;
+                gameOverScreen.style.display = 'flex';
+            }
+        }
+    </script>
+</body>
+</html>
