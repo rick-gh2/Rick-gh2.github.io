@@ -22,7 +22,8 @@
             padding: 40px;
             border-radius: 20px;
             box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-            max-width: 400px;
+            max-width: 450px;
+            width: 85%;
             position: relative;
         }
         h1 {
@@ -44,12 +45,13 @@
             height: 50px;
         }
         button {
-            padding: 12px 30px;
+            padding: 12px 35px;
             font-size: 18px;
+            font-weight: bold;
             border: none;
             border-radius: 25px;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: transform 0.1s ease;
         }
         #yesBtn {
             background-color: #ff4d6d;
@@ -63,6 +65,9 @@
             background-color: #aaa;
             color: white;
             position: absolute;
+            z-index: 999; 
+            /* 讓逃跑時有一點點平滑的視覺感，但消失時會被 JS 覆蓋 */
+            transition: left 0.15s ease, top 0.15s ease, opacity 0.1s ease; 
         }
     </style>
 </head>
@@ -73,27 +78,63 @@
         <p>這週末有空一起去喝杯咖啡、吃個甜點嗎？<br>（聽說那家店的草莓蛋糕超厲害！）</p>
         
         <div class="buttons">
-            <button id="yesBtn" onclick="celebrate()">好哇！</button>
-            <button id="noBtn" onmouseover="moveButton()" onclick="moveButton()">不要</button>
+            <button id="yesBtn" onclick="celebrate()">YES</button>
+            <button id="noBtn" 
+                    onmouseover="moveButton()" 
+                    ontouchstart="vanishAndMove(event)" 
+                    onclick="vanishAndMove(event)">NO</button>
         </div>
     </div>
 
     <script>
-        // 當滑鼠移到「不要」按鈕上時，按鈕會隨機亂跑
-        function moveButton() {
-            const noBtn = document.getElementById('noBtn');
+        // 核心計算：讓按鈕隨機跑到螢幕上安全的位置
+        function getTargetPosition(element) {
+            const padding = 40;
+            const maxX = window.innerWidth - element.offsetWidth - padding;
+            const maxY = window.innerHeight - element.offsetHeight - padding;
             
-            // 計算瀏覽器視窗可用寬高，避免跑出螢幕外
-            const x = Math.random() * (window.innerWidth - noBtn.offsetWidth - 40);
-            const y = Math.random() * (window.innerHeight - noBtn.offsetHeight - 40);
+            const randomX = Math.max(padding, Math.floor(Math.random() * maxX));
+            const randomY = Math.max(padding, Math.floor(Math.random() * maxY));
             
-            // 將按鈕改為相對於整個視窗定位
-            noBtn.style.position = 'fixed';
-            noBtn.style.left = x + 'px';
-            noBtn.style.top = y + 'px';
+            return { x: randomX, y: randomY };
         }
 
-        // 點擊「好哇」之後的驚喜
+        // 1. 正常的滑鼠移過（Hover）逃跑機制
+        function moveButton() {
+            const noBtn = document.getElementById('noBtn');
+            const pos = getTargetPosition(noBtn);
+            
+            noBtn.style.position = 'fixed';
+            noBtn.style.left = pos.x + 'px';
+            noBtn.style.top = pos.y + 'px';
+        }
+
+        // 2. 升級版：被點擊或手機按到時「消失」並瞬移
+        function vanishAndMove(event) {
+            if (event) {
+                event.preventDefault(); // 阻止按鈕預設被選取或點擊行為
+            }
+            
+            const noBtn = document.getElementById('noBtn');
+            
+            // 瞬間變透明（消失）
+            noBtn.style.transition = 'none'; // 關閉動畫，讓消失跟瞬移在背景悄悄完成
+            noBtn.style.opacity = '0';
+            
+            // 計算新位置
+            const pos = getTargetPosition(noBtn);
+            noBtn.style.position = 'fixed';
+            noBtn.style.left = pos.x + 'px';
+            noBtn.style.top = pos.y + 'px';
+            
+            // 延遲 0.4 秒後重新現形（重新出現出現在別的地方）
+            setTimeout(() => {
+                noBtn.style.transition = 'left 0.15s ease, top 0.15s ease, opacity 0.2s ease';
+                noBtn.style.opacity = '1';
+            }, 400);
+        }
+
+        // 點擊「YES」之後的驚喜
         function celebrate() {
             const box = document.getElementById('quizBox');
             box.innerHTML = `
@@ -102,13 +143,11 @@
                 <p>我晚點把時間地點傳給你，<br>期待當天見面！❤️</p>
             `;
             
-            // 簡單的彩色碎紙花效果
             for (let i = 0; i < 50; i++) {
                 createHeart();
             }
         }
 
-        // 製造浪漫愛心飄落效果
         function createHeart() {
             const heart = document.createElement('div');
             heart.innerHTML = '❤️';
