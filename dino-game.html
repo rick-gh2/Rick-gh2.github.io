@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🦕 Google 小恐龍遊戲 - 小蝦特製版</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #f7f7f7;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+        }
+        #game-container {
+            position: relative;
+            width: 800px;
+            max-width: 95vw;
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            border-radius: 12px;
+            background: #fff;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        #ui-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 15px 20px;
+            pointer-events: none;
+            z-index: 10;
+        }
+        #score { font-size: 20px; font-weight: bold; color: #535353; }
+        #high-score { font-size: 18px; color: #999; }
+        #game-over {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%); text-align: center;
+            display: none; z-index: 20;
+        }
+        #game-over h1 { font-size: 36px; color: #535353; margin-bottom: 10px; }
+        #game-over p { font-size: 16px; color: #777; }
+        #start-screen {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%); text-align: center; z-index: 20;
+        }
+        #start-screen h1 { font-size: 28px; color: #535353; margin-bottom: 15px; }
+        #start-screen p { font-size: 16px; color: #777; margin: 8px 0; }
+        .blink { animation: blink 1s infinite; color: #535353; font-size: 18px; margin-top: 20px; }
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+        #night-mode {
+            position: absolute; top: 15px; right: 20px;
+            font-size: 24px; cursor: pointer; z-index: 15;
+        }
+        #mobile-controls { display: none; justify-content: space-around; margin-top: 15px; }
+        .mobile-btn {
+            width: 70px; height: 70px; border-radius: 50%;
+            background: #535353; color: white; font-size: 28px;
+            border: none; cursor: pointer; touch-action: manipulation;
+        }
+        @media (max-width: 600px) { #mobile-controls{display:flex} #night-mode{display:none} }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="game" width="800" height="300"></canvas>
+        <div id="ui-overlay">
+            <div><span id="score">00000</span><span id="high-score">HI 00000</span></div>
+            <span id="night-mode" onclick="toggleNight()">🌙</span>
+        </div>
+        <div id="start-screen">
+            <h1>🦕 小恐龍快跑！</h1>
+            <p>按 <b>空白鍵</b> 或 <b>上箭頭</b> 跳躍</p>
+            <p>按 <b>下箭頭</b> 蹲下</p>
+            <p class="blink">按空白鍵開始遊戲！</p>
+        </div>
+        <div id="game-over">
+            <h1>遊戲結束！</h1>
+            <p id="final-score">得分：0</p>
+            <p>按空白鍵再玩一次</p>
+        </div>
+        <div id="mobile-controls">
+            <button class="mobile-btn" id="btn-crouch">⬇</button>
+            <button class="mobile-btn" id="btn-jump">⬆</button>
+        </div>
+    </div>
+    <script>
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+    const W = 800, H = 300;
+    let gameRunning = false, gameOver = false, score = 0, highScore = parseInt(localStorage.getItem('dinoHighScore')) || 0;
+    let speed = 6, nightMode = false, frameCount = 0;
+    const GROUND_Y = H - 50;
+    document.getElementById('high-score').textContent = `HI ${String(highScore).padStart(5,'0')}`;
+
+    const dino = { x:50, y:GROUND_Y, w:44, h:48, vy:0, grav:0.6, jumpF:-12, jumping:false, ducking:false, legFrame:0, legTimer:0 };
+    let obstacles = [], obsTimer = 0;
+    let clouds = [], stars = [];
+
+    for(let i=0;i<5;i++) clouds.push({x:Math.random()*W, y:30+Math.random()*80, w:40+Math.random()*30, s:0.5+Math.random()*0.5});
+    for(let i=0;i<30;i++) stars.push({x:Math.random()*W, y:Math.random()*(H-100), s:1+Math.random()*2, t:Math.random()*Math.PI*2});
+
+    function drawDino(){
+        const c = nightMode?'#e0e0e0':'#535353';
+        const dh = dino.ducking?30:dino.h, dy = dino.y-dh, dw = dino.ducking?58:dino.w;
+        ctx.fillStyle=c;
+        ctx.fillRect(dino.x+10,dy+8,24,dh-16);
+        ctx.fillRect(dino.x+22,dy,20,20);
+        ctx.fillStyle=nightMode?'#333':'#fff';
+        ctx.fillRect(dino.x+34,dy+4,4,4);
+        ctx.fillStyle=c;
+        ctx.fillRect(dino.x+36,dy+14,8,2);
+        ctx.fillRect(dino.x+20,dy+18,8,4);
+        ctx.fillRect(dino.x+2,dy+12,10,6);
+        if(dino.jumping||!gameRunning){
+            ctx.fillRect(dino.x+14,dy+dh-8,6,8); ctx.fillRect(dino.x+26,dy+dh-8,6,8);
+        } else {
+            dino.legTimer++;
+            if(dino.legTimer>8){dino.legTimer=0; dino.legFrame=1-dino.legFrame;}
+            if(dino.legFrame===0){
+                ctx.fillRect(dino.x+14,dy+dh-8,6,8); ctx.fillRect(dino.x+26,dy+dh-12,6,4);
+            } else {
+                ctx.fillRect(dino.x+14,dy+dh-12,6,4); ctx.fillRect(dino.x+26,dy+dh-8,6,8);
+            }
+        }
+    }
+
+    function drawCactus(o){
+        ctx.fillStyle=nightMode?'#9b9b9b':'#535353';
+        if(o.type==='small'){
+            ctx.fillRect(o.x+4,o.y-30,8,30); ctx.fillRect(o.x,o.y-22,4,12); ctx.fillRect(o.x+12,o.y-18,4,10);
+        } else if(o.type==='large'){
+            ctx.fillRect(o.x+6,o.y-45,14,45); ctx.fillRect(o.x,o.y-34,6,16); ctx.fillRect(o.x+20,o.y-30,6,12);
+        } else {
+            for(let i=0;i<3;i++) ctx.fillRect(o.x+i*14+2,o.y-30-i*5,8,30+i*5);
+        }
+    }
+
+    function drawPtero(o){
+        ctx.fillStyle=nightMode?'#9b9b9b':'#535353';
+        let pf=pterodactylFrame||0; pf++; if(pf>15)pf=0; pterodactylFrame=pf;
+        ctx.fillRect(o.x+8,o.y+8,30,10); ctx.fillRect(o.x+34,o.y+6,16,8); ctx.fillRect(o.x+46,o.y+10,10,4);
+        if(pf<8) ctx.fillRect(o.x+10,o.y-6,20,8); else ctx.fillRect(o.x+10,o.y+18,20,8);
+    }
+
+    function drawGround(){
+        ctx.fillStyle=nightMode?'#666':'#535353';
+        ctx.fillRect(0,GROUND_Y+10,W,2);
+        for(let i=0;i<20;i++){
+            const bx=((i*50-frameCount*speed*0.3)%W+W)%W;
+            if(i%3===0) ctx.fillRect(bx,GROUND_Y+14,15,2);
+        }
+    }
+
+    function drawClouds(){
+        ctx.fillStyle=nightMode?'#444':'#e0e0e0';
+        clouds.forEach(c=>{
+            ctx.beginPath();
+            ctx.arc(c.x,c.y,c.w*0.25,0,Math.PI*2);
+            ctx.arc(c.x+15,c.y-5,c.w*0.2,0,Math.PI*2);
+            ctx.arc(c.x+25,c.y,c.w*0.22,0,Math.PI*2);
+            ctx.arc(c.x+12,c.y+3,c.w*0.18,0,Math.PI*2);
+            ctx.fill();
+        });
+    }
+
+    function drawStars(){
+        if(!nightMode)return;
+        stars.forEach(s=>{
+            s.t+=0.05;
+            const a=0.3+Math.sin(s.t)*0.3;
+            ctx.fillStyle=`rgba(255,255,255,${a})`;
+            ctx.fillRect(s.x,s.y,s.s,s.s);
+        });
+    }
+
+    let pterodactylFrame=0;
+    function spawnObs(){
+        const types=['small','large','group'];
+        const type=types[Math.floor(Math.random()*types.length)];
+        let o={x:W,type:speed};
+        if(Math.random()<0.2&&score>200){
+            o.type='pterodactyl'; o.y=GROUND_Y-20-Math.random()*50; o.w=50; o.h=20;
+        } else if(type==='small'){o.y=GROUND_Y;o.w=16;o.h=30;}
+        else if(type==='large'){o.y=GROUND_Y;o.w=26;o.h=45;}
+        else{o.y=GROUND_Y;o.w=40;o.h=35;}
+        obstacles.push(o);
+    }
+
+    function update(){
+        if(!gameRunning||gameOver)return;
+        frameCount++;
+        if(frameCount%6===0){
+            score++;
+            document.getElementById('score').textContent=String(score).padStart(5,'0');
+            if(score%100===0) speed+=0.5;
+            if(score>0&&score%500===0) nightMode=!nightMode;
+        }
+        if(dino.jumping){
+            dino.vy+=dino.grav; dino.y+=dino.vy;
+            if(dino.y>=GROUND_Y){dino.y=GROUND_Y;dino.jumping=false;dino.vy=0;}
+        }
+        obsTimer++;
+        if(obsTimer>50+Math.random()*40){spawnObs();obsTimer=0;}
+        obstacles.forEach(o=>{o.x-=o.speed;if(o.type==='pterodactyl')o.x-=1;});
+        obstacles=obstacles.filter(o=>o.x>-60);
+        clouds.forEach(c=>{c.x-=c.s;if(c.x<-60){c.x=W+20;c.y=30+Math.random()*80;}});
+
+        const dx=dino.x+14,dw=dino.ducking?58:24,dy=dino.y-(dino.ducking?30:dino.h),dh=dino.ducking?30:dino.h;
+        for(const o of obstacles){
+            const ox=o.x+4,ow=(o.w||30)-8,oy=(o.type==='pterodactyl'?o.y:GROUND_Y)-(o.h||30),oh=o.h||30;
+            if(dx<ox+ow&&dx+dw>ox&&dy<oy+oh&&dy+dh>oy){endGame();return;}
+        }
+    }
+
+    function draw(){
+        ctx.fillStyle=nightMode?'#1a1a2e':'#f7f7f7';
+        ctx.fillRect(0,0,W,H);
+        drawStars(); drawClouds(); drawGround();
+        obstacles.forEach(o=>{if(o.type==='pterodactyl')drawPtero(o);else drawCactus(o);});
+        drawDino();
+    }
+
+    function gameLoop(){update();draw();requestAnimationFrame(gameLoop);}
+    function startGame(){
+        gameRunning=true;gameOver=false;score=0;speed=6;obstacles=[];obsTimer=0;
+        dino.y=GROUND_Y;dino.jumping=false;dino.ducking=false;dino.vy=0;nightMode=false;
+        document.getElementById('start-screen').style.display='none';
+        document.getElementById('game-over').style.display='none';
+        document.getElementById('score').textContent='00000';
+    }
+    function endGame(){
+        gameOver=true;gameRunning=false;
+        if(score>highScore){highScore=score;localStorage.setItem('dinoHighScore',highScore);document.getElementById('high-score').textContent=`HI ${String(highScore).padStart(5,'0')}`;}
+        document.getElementById('final-score').textContent=`得分：${score}`;
+        document.getElementById('game-over').style.display='block';
+    }
+    function jump(){
+        if(!gameRunning&&!gameOver||gameOver){startGame();return;}
+        if(!dino.jumping){dino.jumping=true;dino.vy=dino.jumpF;}
+    }
+    function duck(a){if(gameRunning&&!gameOver)dino.ducking=a;}
+    function toggleNight(){nightMode=!nightMode;document.getElementById('night-mode').textContent=nightMode?'☀️':'🌙';}
+
+    document.addEventListener('keydown',e=>{
+        if(e.code==='Space'||e.code==='ArrowUp'){e.preventDefault();jump();}
+        if(e.code==='ArrowDown'){e.preventDefault();duck(true);}
+    });
+    document.addEventListener('keyup',e=>{if(e.code==='ArrowDown')duck(false);});
+    document.getElementById('btn-jump').addEventListener('touchstart',e=>{e.preventDefault();jump();});
+    document.getElementById('btn-crouch').addEventListener('touchstart',e=>{e.preventDefault();duck(true);});
+    document.getElementById('btn-crouch').addEventListener('touchend',e=>{e.preventDefault();duck(false);});
+
+    gameLoop();
+    </script>
+</body>
+</html>
