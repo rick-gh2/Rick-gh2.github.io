@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🐶 帆帆的道歉</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Microsoft JhengHei', 'Arial', sans-serif;
+            background: linear-gradient(135deg, #ffeef2, #fff0f5, #ffe4e8);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* 漂浮小狗 */
+        .dog-bg {
+            position: fixed;
+            font-size: 2rem;
+            opacity: 0.12;
+            animation: floatDog 8s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes floatDog {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-30px) rotate(10deg); }
+        }
+
+        .container {
+            text-align: center;
+            z-index: 1;
+            padding: 20px;
+        }
+
+        /* 道歉小狗 */
+        .sorry-dog {
+            margin: 0 auto 20px;
+            width: 180px;
+            height: 180px;
+            position: relative;
+            animation: dogBow 2s ease-in-out infinite;
+        }
+
+        @keyframes dogBow {
+            0%, 100% { transform: rotate(-5deg); }
+            50% { transform: rotate(5deg); }
+        }
+
+        .dog-face {
+            width: 180px;
+            height: 180px;
+            background: #FFD93D;
+            border-radius: 50%;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .dog-ear {
+            width: 50px;
+            height: 70px;
+            background: #F4C75D;
+            border-radius: 50%;
+            position: absolute;
+            top: -15px;
+        }
+        .dog-ear.left { left: 10px; transform: rotate(-20deg); }
+        .dog-ear.right { right: 10px; transform: rotate(20deg); }
+
+        .dog-eye {
+            width: 16px;
+            height: 18px;
+            background: #333;
+            border-radius: 50%;
+            position: absolute;
+            top: 55px;
+        }
+        .dog-eye::after {
+            content: '';
+            width: 5px;
+            height: 5px;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+            top: 3px;
+            right: 3px;
+        }
+        .dog-eye.left { left: 45px; }
+        .dog-eye.right { right: 45px; }
+
+        .tear {
+            width: 8px;
+            height: 12px;
+            background: #87CEEB;
+            border-radius: 0 0 50% 50%;
+            position: absolute;
+            top: 72px;
+            animation: tearDrop 1.5s ease-in-out infinite;
+        }
+        .tear.left { left: 50px; animation-delay: 0s; }
+        .tear.right { right: 50px; animation-delay: 0.75s; }
+
+        @keyframes tearDrop {
+            0% { opacity: 0; transform: translateY(0); }
+            50% { opacity: 1; transform: translateY(10px); }
+            100% { opacity: 0; transform: translateY(20px); }
+        }
+
+        .dog-nose {
+            width: 20px;
+            height: 15px;
+            background: #333;
+            border-radius: 50%;
+            position: absolute;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .dog-mouth {
+            width: 60px;
+            height: 30px;
+            border: 3px solid #333;
+            border-top: none;
+            border-radius: 0 0 60px 60px;
+            position: absolute;
+            top: 95px;
+            left: 50%;
+            transform: translateX(-50%);
+            animation: sadMouth 2s ease-in-out infinite;
+        }
+
+        @keyframes sadMouth {
+            0%, 100% { height: 30px; }
+            50% { height: 35px; }
+        }
+
+        .dog-paws {
+            width: 130px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            position: relative;
+            top: -10px;
+        }
+
+        .dog-paw {
+            width: 35px;
+            height: 45px;
+            background: #F4C75D;
+            border-radius: 50% 50% 40% 40%;
+            animation: pawReach 2s ease-in-out infinite;
+        }
+        .dog-paw.left { transform: rotate(15deg); }
+        .dog-paw.right { transform: rotate(-15deg); }
+
+        @keyframes pawReach {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        .title {
+            font-size: 2.2rem;
+            color: #e74c3c;
+            margin-bottom: 5px;
+            animation: titlePulse 2s ease-in-out infinite;
+        }
+
+        @keyframes titlePulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+        }
+
+        .subtitle {
+            color: #888;
+            font-size: 1rem;
+            margin-bottom: 10px;
+        }
+
+        .letter {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            max-width: 350px;
+            margin: 0 auto 30px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+            border-left: 4px solid #e74c3c;
+            text-align: left;
+            line-height: 1.8;
+            color: #555;
+            font-size: 0.95rem;
+        }
+
+        .letter .sign {
+            text-align: right;
+            color: #e74c3c;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        /* 按鈕區域 */
+        .btn-area {
+            position: relative;
+            min-height: 80px;
+            margin: 20px auto;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .accept-btn {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            padding: 16px 50px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(46,204,113,0.3);
+            animation: btnPulse 1.5s ease-in-out infinite;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .accept-btn::before {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shine 2s infinite;
+        }
+
+        @keyframes shine {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .accept-btn:hover {
+            transform: scale(1.08);
+            box-shadow: 0 12px 35px rgba(46,204,113,0.4);
+        }
+
+        @keyframes btnPulse {
+            0%, 100% { box-shadow: 0 8px 25px rgba(46,204,113,0.3); }
+            50% { box-shadow: 0 8px 35px rgba(46,204,113,0.5); }
+        }
+
+        .reject-btn {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            padding: 16px 50px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            cursor: pointer;
+            position: fixed;
+            z-index: 50;
+            transition: none;
+            box-shadow: 0 8px 25px rgba(231,76,60,0.3);
+        }
+
+        /* 愛心爆發效果 */
+        .heart-burst {
+            position: fixed;
+            font-size: 2rem;
+            pointer-events: none;
+            z-index: 100;
+            animation: heartBurst 1.5s ease forwards;
+        }
+
+        @keyframes heartBurst {
+            0% { transform: scale(0); opacity: 1; }
+            50% { transform: scale(1.5); opacity: 1; }
+            100% { transform: scale(0) translateY(-200px); opacity: 0; }
+        }
+
+        /* 完成訊息 */
+        .success-msg {
+            display: none;
+            text-align: center;
+            animation: fadeInUp 0.5s ease;
+        }
+
+        .success-msg .emoji {
+            font-size: 4rem;
+            display: block;
+            margin-bottom: 15px;
+        }
+
+        .success-msg .text {
+            font-size: 1.5rem;
+            color: #2ecc71;
+            font-weight: bold;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #2ecc71;
+            text-decoration: none;
+            font-weight: bold;
+            transition: color 0.2s;
+        }
+        .back-link:hover { color: #27ae60; }
+
+        @media (max-width: 500px) {
+            .title { font-size: 1.8rem; }
+            .letter { padding: 15px; font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="dog-bg" style="top:10%;left:5%;animation-delay:0s">🐶</div>
+    <div class="dog-bg" style="top:25%;right:8%;animation-delay:1s">🐕</div>
+    <div class="dog-bg" style="top:55%;left:3%;animation-delay:2s">🐾</div>
+    <div class="dog-bg" style="top:75%;right:5%;animation-delay:3s">🐶</div>
+    <div class="dog-bg" style="top:40%;left:85%;animation-delay:1.5s">🐕</div>
+
+    <div class="container">
+        <div class="sorry-dog">
+            <div class="dog-face">
+                <div class="dog-ear left"></div>
+                <div class="dog-ear right"></div>
+                <div class="dog-eye left"></div>
+                <div class="dog-eye right"></div>
+                <div class="tear left"></div>
+                <div class="tear right"></div>
+                <div class="dog-nose"></div>
+                <div class="dog-mouth"></div>
+            </div>
+            <div class="dog-paws">
+                <div class="dog-paw left"></div>
+                <div class="dog-paw right"></div>
+            </div>
+        </div>
+
+        <h1 class="title">🐶 對不起！</h1>
+        <p class="subtitle">帆帆知道自己錯了...</p>
+
+        <div class="letter">
+            親愛的小月：
+            <br><br>
+            我知道我做錯了事，真的很抱歉。
+            想著你生氣的樣子，心裡就好難過。
+            <br><br>
+            我保證以後會更好，不要再讓我失望好嗎？
+            原諒我這次吧～🥺
+            <div class="sign">—— 帆帆 🐾</div>
+        </div>
+
+        <div class="btn-area" id="btnArea">
+            <button class="accept-btn" onclick="accept()">
+                💖 我原諒你
+            </button>
+            <button class="reject-btn" id="rejectBtn"
+                onmouseenter="runAway()"
+                ontouchstart="runAway()">
+                😤 不接受
+            </button>
+        </div>
+
+        <div class="success-msg" id="successMsg">
+            <span class="emoji">🎉💕🐶</span>
+            <div class="text">太開心了！謝謝你原諒我！</div>
+            <div style="margin-top:10px;color:#aaa;font-size:0.9rem;">
+                帆帆永遠愛你～ 💖<br>
+                
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // ===== 不接受按鈕：逃跑 =====
+    const rejectBtn = document.getElementById('rejectBtn');
+    const btnArea = document.getElementById('btnArea');
+
+    function runAway() {
+        // 隨機位置但保持在螢幕內
+        const maxX = window.innerWidth - rejectBtn.offsetWidth - 20;
+        const maxY = window.innerHeight - rejectBtn.offsetHeight - 20;
+        const minX = 20;
+        const minY = 20;
+
+        const newX = Math.max(minX, Math.min(maxX, Math.random() * maxX));
+        const newY = Math.max(minY, Math.min(maxY, Math.random() * maxY));
+
+        rejectBtn.style.left = newX + 'px';
+        rejectBtn.style.top = newY + 'px';
+    }
+
+    // 點擊不接受 → 跑掉
+    rejectBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        runAway();
+    });
+
+    // ===== 接受道歉 =====
+    function accept() {
+        // 愛心爆發
+        const hearts = ['💖','💕','💗','💓','💝','🥰','😻','🐶','🐾','✨'];
+        for (let i = 0; i < 40; i++) {
+            setTimeout(() => {
+                const heart = document.createElement('div');
+                heart.className = 'heart-burst';
+                heart.textContent = hearts[Math.floor(Math.random() * hearts.length)];
+                heart.style.left = Math.random() * window.innerWidth + 'px';
+                heart.style.top = window.innerHeight + 'px';
+                heart.style.fontSize = (Math.random() * 2 + 1.5) + 'rem';
+                document.body.appendChild(heart);
+                setTimeout(() => heart.remove(), 1500);
+            }, Math.random() * 1000);
+        }
+
+        // 隱藏內容
+        document.querySelector('.sorry-dog').style.display = 'none';
+        document.querySelector('.title').style.display = 'none';
+        document.querySelector('.subtitle').style.display = 'none';
+        document.querySelector('.letter').style.display = 'none';
+        document.querySelector('.btn-area').style.display = 'none';
+        document.querySelectorAll('.dog-bg').forEach(el => el.style.display = 'none');
+
+        // 顯示成功訊息
+        document.getElementById('successMsg').style.display = 'block';
+    }
+
+    // 初始化不接受按鈕位置（螢幕中間偏右）
+    rejectBtn.style.position = 'fixed';
+    rejectBtn.style.left = (window.innerWidth / 2 + 120) + 'px';
+    rejectBtn.style.top = 'calc(50% + 80px)';
+    rejectBtn.style.transform = 'translate(-50%, -50%)';
+    rejectBtn.style.left = (window.innerWidth / 2 + 140) + 'px';
+    </script>
+</body>
+</html>
