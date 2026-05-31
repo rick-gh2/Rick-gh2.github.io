@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎬 影片區 - 小蝦的網頁世界</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Microsoft JhengHei', 'Arial', sans-serif;
+            background: #0a0a1a;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* 科技線框背景 */
+        .grid-bg {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: 0;
+        }
+
+        /* 掃描線效果 */
+        .scanline {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 255, 255, 0.015) 2px,
+                rgba(0, 255, 255, 0.015) 4px
+            );
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* 頂部導航列 */
+        .top-bar {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 100;
+            padding: 15px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(180deg, rgba(10,10,26,0.95) 0%, transparent 100%);
+            backdrop-filter: blur(10px);
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 24px;
+            background: rgba(0, 255, 255, 0.08);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 8px;
+            color: #00ffff;
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .back-btn:hover {
+            background: rgba(0, 255, 255, 0.18);
+            border-color: rgba(0, 255, 255, 0.6);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+            transform: translateX(-3px);
+        }
+
+        /* 電影感標題區 */
+        .hero {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            padding: 120px 20px 60px;
+            background: radial-gradient(ellipse at center top, rgba(0, 255, 255, 0.06) 0%, transparent 60%);
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #00ffff, transparent);
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 900;
+            letter-spacing: 6px;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, #00ffff, #0080ff, #ff00ff, #00ffff);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradientShift 4s ease infinite;
+            text-transform: uppercase;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .hero .tagline {
+            color: rgba(0, 255, 255, 0.5);
+            font-size: 1.1rem;
+            letter-spacing: 8px;
+            text-transform: uppercase;
+            font-weight: 300;
+        }
+
+        /* 影片卡片區域 */
+        .video-grid {
+            position: relative;
+            z-index: 2;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+            gap: 30px;
+            padding: 40px 50px 100px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* 電影感影片卡片 */
+        .video-card {
+            position: relative;
+            background: linear-gradient(145deg, rgba(15, 15, 35, 0.9), rgba(5, 5, 20, 0.95));
+            border: 1px solid rgba(0, 255, 255, 0.1);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        .video-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 12px;
+            padding: 1px;
+            background: linear-gradient(135deg, rgba(0,255,255,0.2), transparent 40%, transparent 60%, rgba(255,0,255,0.2));
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+
+        .video-card:hover::before { opacity: 1; }
+
+        .video-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 
+                0 20px 60px rgba(0, 255, 255, 0.15),
+                0 0 100px rgba(0, 255, 255, 0.05);
+            border-color: rgba(0, 255, 255, 0.3);
+        }
+
+        /* 影片容器 */
+        .video-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: #000;
+            overflow: hidden;
+        }
+
+        .video-container video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* 錄製資訊浮層 */
+        .video-overlay {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            padding: 40px 20px 15px;
+            background: linear-gradient(transparent, rgba(0,0,0,0.8));
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+        }
+
+        .video-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            background: rgba(0, 255, 255, 0.15);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 4px;
+            color: #00ffff;
+            font-size: 0.75rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        /* 卡片資訊區 */
+        .video-info {
+            padding: 25px;
+        }
+
+        .video-info h3 {
+            color: #fff;
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: 1px;
+        }
+
+        .video-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 12px;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: rgba(0, 255, 255, 0.6);
+            font-size: 0.85rem;
+        }
+
+        .meta-icon {
+            font-size: 0.9rem;
+        }
+
+        .video-desc {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        /* 播放按鈕 */
+        .play-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 28px;
+            background: linear-gradient(135deg, #00ffff, #0080ff);
+            border: none;
+            border-radius: 8px;
+            color: #000;
+            font-size: 0.95rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            margin-top: 15px;
+        }
+
+        .play-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 30px rgba(0, 255, 255, 0.4);
+        }
+
+        /* 新增影片區 */
+        .add-section {
+            position: relative;
+            z-index: 2;
+            padding: 0 50px 100px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .add-card {
+            border: 2px dashed rgba(0, 255, 255, 0.15);
+            border-radius: 12px;
+            padding: 60px 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(0, 255, 255, 0.02);
+        }
+
+        .add-card:hover {
+            border-color: rgba(0, 255, 255, 0.4);
+            background: rgba(0, 255, 255, 0.06);
+            transform: scale(1.01);
+        }
+
+        .add-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            display: block;
+            opacity: 0.6;
+        }
+
+        .add-card:hover .add-icon { opacity: 1; }
+
+        .add-text {
+            color: rgba(0, 255, 255, 0.5);
+            font-size: 1.1rem;
+            font-weight: bold;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+        /* 電影感光暈 */
+        .cinema-glow {
+            position: fixed;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            filter: blur(200px);
+            opacity: 0.06;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .cinema-glow-1 { top: -200px; right: -200px; background: #00ffff; }
+        .cinema-glow-2 { bottom: -200px; left: -200px; background: #ff00ff; }
+
+        /* 電影遮幅 */
+        .cinema-bars {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 60px;
+            background: #000;
+            z-index: 50;
+            display: none;
+        }
+        .cinema-bars-top { top: 0; }
+        .cinema-bars-bottom { bottom: 0; top: auto; }
+
+        /* 動畫效果 */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .video-card, .add-card {
+            animation: fadeInUp 0.6s ease both;
+        }
+        .video-card:nth-child(1) { animation-delay: 0.1s; }
+        .video-card:nth-child(2) { animation-delay: 0.2s; }
+
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 2.2rem; letter-spacing: 3px; }
+            .video-grid { grid-template-columns: 1fr; padding: 20px; }
+            .hero { padding: 100px 15px 40px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="grid-bg"></div>
+    <div class="scanline"></div>
+    <div class="cinema-glow cinema-glow-1"></div>
+    <div class="cinema-glow cinema-glow-2"></div>
+
+    <!-- 頂部導航 -->
+    <div class="top-bar">
+        <a href="index.html" class="back-btn">← 回首頁</a>
+        <span style="color: rgba(0,255,255,0.4); font-size: 0.8rem; letter-spacing: 2px;">🎬 VIDEO ZONE</span>
+    </div>
+
+    <!-- 電影感標題 -->
+    <div class="hero">
+        <h1>影片區</h1>
+        <p class="tagline">AI-Generated • ComfyUI • WAN2.2</p>
+    </div>
+
+    <!-- 影片卡片 -->
+    <div class="video-grid">
+        <!-- 影片 1：示範影片 -->
+        <div class="video-card">
+            <div class="video-container">
+                <video controls preload="metadata" poster="">
+                    <source src="https://rick-gh2.github.io/demo_video.mp4" type="video/mp4">
+                    您的瀏覽器不支援影片播放
+                </video>
+                <div class="video-overlay">
+                    <div class="video-badge">🎬 AI生成</div>
+                    <div class="video-badge">10s • 832x480</div>
+                </div>
+            </div>
+            <div class="video-info">
+                <h3>🏔️ 晨霧山嶺 cinematic 航拍</h3>
+                <div class="video-meta">
+                    <span class="meta-item"><span class="meta-icon">🎥</span> WAN2.2 T2V 14B</span>
+                    <span class="meta-item"><span class="meta-icon">🖥️</span> NVIDIA GB10</span>
+                    <span class="meta-item"><span class="meta-icon">⚡</span> 本地生成</span>
+                </div>
+                <p class="video-desc">A breathtaking cinematic drone shot flying over a misty mountain range at golden sunrise.</p>
+                <a href="https://rick-gh2.github.io/demo_video.mp4" class="play-btn" target="_blank">▶ 播放影片</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 新增區 -->
+    <div class="add-section">
+        <div class="add-card">
+            <span class="add-icon">＋</span>
+            <div class="add-text">新增影片</div>
+        </div>
+    </div>
+
+    <script>
+        // 掃描線動畫
+        const scanline = document.querySelector('.scanline');
+        let scanY = 0;
+        function animateScanline() {
+            scanY += 0.5;
+            if (scanY > 100) scanY = 0;
+            scanline.style.backgroundPositionY = scanY + 'px';
+            requestAnimationFrame(animateScanline);
+        }
+        animateScanline();
+
+        // 影片預覽
+        document.querySelectorAll('video').forEach(video => {
+            video.addEventListener('play', () => {
+                video.parentElement.style.border = '1px solid rgba(0,255,255,0.3)';
+            });
+            video.addEventListener('pause', () => {
+                video.parentElement.style.border = 'none';
+            });
+        });
+
+        // 新增影片卡片
+        document.querySelector('.add-card').addEventListener('click', () => {
+            alert('🎬 新增影片功能\n\n可以透過 GitHub API 上傳新影片到倉庫\n影片會自動出現在影片區！');
+        });
+    </script>
+</body>
+</html>
