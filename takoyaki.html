@@ -4,206 +4,457 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>瘋狂章魚燒 🐙 Crazy Takoyaki</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
-        /* 針對手機全面優化，防止亂縮放與滾動 */
-        * {
-            box-sizing: border-box;
-            user-select: none;
-            -webkit-user-select: none;
+        :root {
+            --warm: #fceade;
+            --orange: #e76f51;
+            --gold: #f4a261;
+            --dark: #264653;
+            --grill: #3d3d3d;
         }
+        * { box-sizing: border-box; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; }
         body {
-            font-family: 'Arial', sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #fceade;
+            font-family: 'Noto Sans TC', Arial, sans-serif;
+            margin: 0; padding: 0;
+            background: var(--warm);
             overflow: hidden;
             height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
         }
-        /* 計分板 */
+
+        /* ===== Header ===== */
         .header {
             width: 100%;
-            padding: 15px 20px;
+            padding: 12px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background-color: #e76f51;
+            background: linear-gradient(135deg, #e76f51, #f4a261);
             color: white;
-            font-size: 20px;
-            font-weight: bold;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            font-size: 18px;
+            font-weight: 700;
+            box-shadow: 0 4px 20px rgba(231,111,81,0.4);
+            z-index: 10;
         }
-        /* 烤盤遊戲區 */
+        .header .icon { font-size: 22px; margin-right: 6px; }
+        .score-badge {
+            background: rgba(255,255,255,0.25);
+            padding: 6px 16px;
+            border-radius: 20px;
+            backdrop-filter: blur(4px);
+        }
+        .timer-badge {
+            background: rgba(255,255,255,0.25);
+            padding: 6px 16px;
+            border-radius: 20px;
+            backdrop-filter: blur(4px);
+        }
+        .timer-badge.warning { background: rgba(255,0,0,0.35); animation: pulse 0.5s infinite alternate; }
+
+        @keyframes pulse { to { transform: scale(1.05); } }
+
+        /* ===== 烤盤 ===== */
         .game-board {
             flex: 1;
             width: 100%;
             max-width: 500px;
             position: relative;
-            background-color: #3d3d3d; /* 鐵板顏色 */
-            background-image: radial-gradient(#2b2b2b 20%, transparent 20%),
-                              radial-gradient(#2b2b2b 20%, transparent 20%);
-            background-size: 60px 60px;
-            background-position: 0 0, 30px 30px;
+            background-color: var(--grill);
+            background-image:
+                radial-gradient(circle, #4a4a4a 2px, transparent 2px),
+                radial-gradient(circle, #353535 3px, transparent 3px);
+            background-size: 30px 30px, 60px 60px;
+            background-position: 0 0, 15px 15px;
             overflow: hidden;
         }
-        /* 章魚燒本體 */
+        .game-board::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, transparent 0%, rgba(255,100,0,0.03) 50%, transparent 100%);
+            pointer-events: none;
+        }
+        /* 加熱效果 */
+        .game-board::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 80px;
+            background: linear-gradient(to top, rgba(255,87,34,0.15), transparent);
+            pointer-events: none;
+        }
+
+        /* ===== 章魚燒 ===== */
         .tako {
             position: absolute;
             width: 65px;
             height: 65px;
             border-radius: 50%;
-            font-size: 38px;
+            font-size: 34px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            animation: popUp 0.2s ease-out;
-            /* 防止手機點擊時出現藍色高亮框 */
-            -webkit-tap-highlight-color: transparent; 
+            animation: popUp 0.25s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+            transition: transform 0.1s ease, opacity 0.1s ease;
+            z-index: 2;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.3);
         }
+        .tako::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 30%, rgba(255,255,255,0.4), transparent 60%);
+            pointer-events: none;
+        }
+        .tako.normal { background: radial-gradient(circle at 40% 35%, #fdd835, #f9a825, #e65100); }
+        .tako.golden { background: radial-gradient(circle at 40% 35%, #ffca28, #ff8f00, #e65100); box-shadow: 0 0 15px rgba(255,152,0,0.6); }
+        .tako.octopus { background: radial-gradient(circle at 40% 35%, #ce93d8, #8e24aa, #6a1b9a); box-shadow: 0 0 20px rgba(156,39,176,0.6); }
+        .tako.burnt { background: radial-gradient(circle at 40% 35%, #555, #333, #111); opacity: 0.85; }
+
         @keyframes popUp {
-            0% { transform: scale(0); }
-            100% { transform: scale(1); }
+            0% { transform: scale(0) rotate(-15deg); }
+            100% { transform: scale(1) rotate(0); }
         }
-        /* 結束畫面彈窗 */
+
+        /* ===== 特效粒子 ===== */
+        .sparkle {
+            position: absolute;
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: sparkle 0.6s ease-out forwards;
+            z-index: 5;
+        }
+        @keyframes sparkle {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(0) translate(var(--tx), var(--ty)); opacity: 0; }
+        }
+
+        .score-float {
+            position: absolute;
+            font-size: 20px;
+            font-weight: 900;
+            pointer-events: none;
+            animation: floatUp 0.8s ease-out forwards;
+            z-index: 10;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.4);
+        }
+        .score-float.positive { color: #4caf50; }
+        .score-float.negative { color: #f44336; }
+        @keyframes floatUp {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(-60px) scale(1.3); opacity: 0; }
+        }
+
+        /* ===== 進度條 (時間) ===== */
+        .timer-bar-wrap {
+            width: 100%;
+            max-width: 500px;
+            height: 6px;
+            background: rgba(0,0,0,0.15);
+            margin-top: 2px;
+        }
+        .timer-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #4caf50, #8bc34a);
+            border-radius: 3px;
+            transition: width 1s linear;
+        }
+        .timer-bar.warning { background: linear-gradient(90deg, #f44336, #ff9800); }
+
+        /* ===== 結束畫面 ===== */
         .overlay {
             display: none;
             position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8);
+            inset: 0;
+            background: rgba(0,0,0,0.85);
             justify-content: center;
             align-items: center;
             flex-direction: column;
             color: white;
             z-index: 1000;
+            backdrop-filter: blur(8px);
         }
-        .overlay h2 { font-size: 36px; margin-bottom: 10px; color: #f4a261; }
-        .overlay p { font-size: 22px; margin-bottom: 20px; }
+        .overlay-content {
+            background: linear-gradient(145deg, #1a1a2e, #16213e);
+            padding: 40px 36px;
+            border-radius: 28px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.1);
+            max-width: 340px;
+            width: 90%;
+            animation: overlayIn 0.4s ease;
+        }
+        @keyframes overlayIn {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .overlay-content h2 {
+            font-size: 28px;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #f4a261, #e76f51);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .overlay-content .trophy { font-size: 56px; margin: 10px 0; }
+        .overlay-content .final-score {
+            font-size: 42px;
+            font-weight: 900;
+            color: #feca57;
+            margin: 5px 0;
+        }
+        .overlay-content .label { font-size: 14px; color: #b2bec3; margin-bottom: 20px; }
         .btn {
-            background-color: #e76f51;
+            background: linear-gradient(135deg, #e76f51, #f4a261);
             color: white;
             border: none;
-            padding: 15px 40px;
-            font-size: 20px;
+            padding: 14px 40px;
+            font-size: 18px;
             border-radius: 30px;
-            font-weight: bold;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 5px 20px rgba(231,111,81,0.4);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(231,111,81,0.6); }
+        .btn:active { transform: translateY(0); }
+        .back-link {
+            display: inline-block;
+            margin-top: 16px;
+            color: rgba(255,255,255,0.5);
+            text-decoration: none;
+            font-size: 14px;
+        }
+        .back-link:hover { color: rgba(255,255,255,0.8); }
+
+        /* ===== Combo 提示 ===== */
+        .combo-display {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 32px;
+            font-weight: 900;
+            color: #feca57;
+            text-shadow: 0 0 20px rgba(254,202,87,0.8);
+            pointer-events: none;
+            animation: comboIn 0.8s ease-out forwards;
+            z-index: 15;
+        }
+        @keyframes comboIn {
+            0% { transform: translate(-50%,-50%) scale(0.3); opacity: 0; }
+            40% { transform: translate(-50%,-50%) scale(1.3); opacity: 1; }
+            100% { transform: translate(-50%,-50%) scale(1); opacity: 0; }
+        }
+
+        @media (max-width: 400px) {
+            .header { font-size: 15px; padding: 10px 14px; }
+            .score-badge, .timer-badge { padding: 4px 12px; font-size: 14px; }
+            .overlay-content { padding: 28px 22px; }
+            .overlay-content h2 { font-size: 24px; }
+            .overlay-content .final-score { font-size: 34px; }
         }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <div>分數: <span id="score">0</span></div>
-        <div>時間: <span id="time">30</span>s</div>
+        <div class="score-badge"><span class="icon">🐙</span>分數: <span id="score">0</span></div>
+        <div class="timer-badge" id="timerBadge"><span class="icon">⏱️</span><span id="time">30</span>s</div>
+    </div>
+    <div class="timer-bar-wrap">
+        <div class="timer-bar" id="timerBar" style="width:100%"></div>
     </div>
 
-    <div class="game-board" id="board">
-        </div>
+    <div class="game-board" id="board"></div>
 
     <div class="overlay" id="gameOver">
-        <h2>攤位打烊啦！</h2>
-        <p>總共烤了 <span id="finalScore">0</span> 個完美章魚燒！</p>
-        <button class="btn" onclick="startGame()">再烤一盤</button>
+        <div class="overlay-content">
+            <div class="trophy" id="trophyEmoji">🎉</div>
+            <h2 id="endTitle">攤位打烊啦！</h2>
+            <div class="final-score" id="finalScore">0</div>
+            <div class="label">完美章魚燒</div>
+            <button class="btn" onclick="startGame()">🐙 再烤一盤</button>
+            <br>
+            <a href="index.html" class="back-link">← 回首頁</a>
+        </div>
     </div>
 
     <script>
-        const board = document.getElementById('board');
-        const scoreEl = document.getElementById('score');
-        const timeEl = document.getElementById('time');
-        const gameOverEl = document.getElementById('gameOver');
-        const finalScoreEl = document.getElementById('finalScore');
+    const board = document.getElementById('board');
+    const scoreEl = document.getElementById('score');
+    const timeEl = document.getElementById('time');
+    const timerBadge = document.getElementById('timerBadge');
+    const timerBar = document.getElementById('timerBar');
+    const gameOverEl = document.getElementById('gameOver');
+    const finalScoreEl = document.getElementById('finalScore');
+    const endTitle = document.getElementById('endTitle');
+    const trophyEmoji = document.getElementById('trophyEmoji');
 
-        let score = 0;
-        let timeLeft = 30;
-        let gameInterval;
-        let spawnInterval;
-        
-        // 各種章魚燒的類型：[表情, 分數變更, 是不是炸彈]
-        const takoTypes = [
-            { icon: '🟡', score: 1 },  // 普通麵糊
-            { icon: '🟠', score: 2 },  // 金黃熟透 (高分!)
-            { icon: '🐙', score: 3 },  // 抓到整隻大章魚 (超高分!)
-            { icon: '⚫', score: -2 }  // 烤焦的黑炭 (扣分陷阱!)
-        ];
+    let score = 0, timeLeft = 30, totalTime = 30;
+    let gameInterval, spawnInterval;
+    let comboCount = 0, comboTimer = null;
+    let lastSpawnTime = 0;
 
-        function startGame() {
-            // 初始化數據
-            score = 0;
-            timeLeft = 30;
-            scoreEl.textContent = score;
+    const takoTypes = [
+        { icon: '🟡', cls: 'normal', score: 1, weight: 50 },
+        { icon: '🟠', cls: 'golden', score: 2, weight: 25 },
+        { icon: '🐙', cls: 'octopus', score: 5, weight: 10 },
+        { icon: '⚫', cls: 'burnt', score: -3, weight: 15 }
+    ];
+
+    // 權重隨機選擇
+    function pickType() {
+        const total = takoTypes.reduce((s,t) => s+t.weight, 0);
+        let r = Math.random() * total;
+        for (const t of takoTypes) {
+            r -= t.weight;
+            if (r <= 0) return t;
+        }
+        return takoTypes[0];
+    }
+
+    // 發射粒子特效
+    function spawnSparkles(x, y, color, count=8) {
+        for (let i = 0; i < count; i++) {
+            const s = document.createElement('div');
+            s.className = 'sparkle';
+            const angle = (Math.PI * 2 / count) * i;
+            const dist = 20 + Math.random() * 25;
+            s.style.left = x + 'px';
+            s.style.top = y + 'px';
+            s.style.background = color;
+            s.style.setProperty('--tx', Math.cos(angle)*dist + 'px');
+            s.style.setProperty('--ty', Math.sin(angle)*dist + 'px');
+            board.appendChild(s);
+            setTimeout(() => s.remove(), 600);
+        }
+    }
+
+    // 浮動分數
+    function showFloatScore(x, y, val) {
+        const f = document.createElement('div');
+        f.className = 'score-float ' + (val > 0 ? 'positive' : 'negative');
+        f.textContent = (val > 0 ? '+' : '') + val;
+        f.style.left = x + 'px';
+        f.style.top = y + 'px';
+        board.appendChild(f);
+        setTimeout(() => f.remove(), 800);
+    }
+
+    // Combo 提示
+    function showCombo(n) {
+        const c = document.createElement('div');
+        c.className = 'combo-display';
+        c.textContent = `🔥 ${n}x COMBO!`;
+        board.appendChild(c);
+        setTimeout(() => c.remove(), 800);
+    }
+
+    function startGame() {
+        score = 0; timeLeft = 30; totalTime = 30;
+        comboCount = 0;
+        scoreEl.textContent = score;
+        timeEl.textContent = timeLeft;
+        timerBar.style.width = '100%';
+        timerBar.classList.remove('warning');
+        timerBadge.classList.remove('warning');
+        gameOverEl.style.display = 'none';
+        board.innerHTML = '';
+
+        gameInterval = setInterval(() => {
+            timeLeft--;
             timeEl.textContent = timeLeft;
-            board.innerHTML = '';
-            gameOverEl.style.display = 'none';
+            timerBar.style.width = ((timeLeft/totalTime)*100) + '%';
+            if (timeLeft <= 10) {
+                timerBar.classList.add('warning');
+                timerBadge.classList.add('warning');
+            }
+            if (timeLeft <= 0) endGame();
+        }, 1000);
 
-            // 開始倒數計時
-            gameInterval = setInterval(() => {
-                timeLeft--;
-                timeEl.textContent = timeLeft;
-                if (timeLeft <= 0) {
-                    endGame();
-                }
-            }, 1000);
+        lastSpawnTime = Date.now();
+        spawnInterval = setInterval(spawnTako, 500);
+    }
 
-            // 開始生成章魚燒 (每 500 毫秒出一顆，速度很快喔！)
-            spawnInterval = setInterval(spawnTako, 500);
-        }
+    function spawnTako() {
+        if (timeLeft <= 0) return;
+        // 隨時間加速
+        const now = Date.now();
+        const elapsed = totalTime - timeLeft;
+        const interval = Math.max(250, 500 - elapsed * 5);
 
-        function spawnTako() {
-            if (timeLeft <= 0) return;
+        const tako = document.createElement('div');
+        tako.classList.add('tako');
+        const tipo = pickType();
+        tako.classList.add(tipo.cls);
+        tako.innerHTML = tipo.icon;
 
-            const tako = document.createElement('div');
-            tako.classList.add('tako');
+        const pad = 20, maxX = board.clientWidth - 70, maxY = board.clientHeight - 70;
+        const tx = Math.floor(Math.random() * (maxX - pad)) + pad;
+        const ty = Math.floor(Math.random() * (maxY - pad)) + pad;
+        tako.style.left = tx + 'px';
+        tako.style.top = ty + 'px';
 
-            // 隨機決定這次出現哪種章魚燒 (高機率普通，低機率大章魚或烤焦)
-            const randomType = takoTypes[Math.floor(Math.random() * takoTypes.length)];
-            tako.innerHTML = randomType.icon;
-            
-            // 計算手機螢幕範圍內的隨機位置
-            const padding = 20;
-            const maxX = board.clientWidth - 70;
-            const maxY = board.clientHeight - 70;
-            tako.style.left = Math.floor(Math.random() * (maxX - padding) + padding) + 'px';
-            tako.style.top = Math.floor(Math.random() * (maxY - padding) + padding) + 'px';
+        const handleHit = (e) => {
+            e.preventDefault();
+            if (!tako.parentNode) return;
 
-            // 綁定手機觸控與點擊事件（touchstart 讓手機一摸到就得分，反應更靈敏）
-            const handleHit = (e) => {
-                e.preventDefault();
-                score += randomType.score;
-                if (score < 0) score = 0; // 分數不為負
-                scoreEl.textContent = score;
-                
-                // 消失動畫特效
-                tako.style.transform = 'scale(1.4)';
-                tako.style.opacity = '0';
-                tako.style.transition = 'all 0.1s ease';
-                setTimeout(() => tako.remove(), 100);
-            };
+            // Combo 系統
+            comboCount++;
+            clearTimeout(comboTimer);
+            comboTimer = setTimeout(() => { comboCount = 0; }, 1500);
+            if (comboCount >= 3) showCombo(comboCount);
 
-            tako.addEventListener('touchstart', handleHit);
-            tako.addEventListener('mousedown', handleHit);
+            let pts = tipo.score;
+            if (comboCount >= 5) pts = Math.floor(pts * 1.5);
 
-            board.appendChild(tako);
+            score += pts;
+            if (score < 0) score = 0;
+            scoreEl.textContent = score;
 
-            // 如果玩家都沒點，1.2 秒後章魚燒會自己冷掉消失
-            setTimeout(() => {
-                if (tako.parentNode) {
-                    tako.remove();
-                }
-            }, 1200);
-        }
+            // 特效
+            const color = tipo.cls === 'golden' ? '#feca57' :
+                          tipo.cls === 'octopus' ? '#ce93d8' :
+                          tipo.cls === 'burnt' ? '#555' : '#fdd835';
+            spawnSparkles(tx + 32, ty + 32, color, tipo.cls === 'octopus' ? 14 : 8);
+            showFloatScore(tx + 32, ty + 10, pts);
 
-        function endGame() {
-            clearInterval(gameInterval);
-            clearInterval(spawnInterval);
-            finalScoreEl.textContent = score;
-            gameOverEl.style.display = 'flex';
-        }
+            tako.style.transform = 'scale(1.5)';
+            tako.style.opacity = '0';
+            tako.style.transition = 'all 0.15s ease';
+            setTimeout(() => tako.remove(), 150);
+        };
 
-        // 自動啟動遊戲
-        window.onload = startGame;
+        tako.addEventListener('touchstart', handleHit, { passive: false });
+        tako.addEventListener('mousedown', handleHit);
+        board.appendChild(tako);
+
+        // 消失
+        setTimeout(() => { if (tako.parentNode) tako.remove(); }, 1400);
+    }
+
+    function endGame() {
+        clearInterval(gameInterval);
+        clearInterval(spawnInterval);
+        finalScoreEl.textContent = score;
+
+        if (score >= 80) { endTitle.textContent = '章魚燒之神！'; trophyEmoji.textContent = '🏆'; }
+        else if (score >= 50) { endTitle.textContent = '攤位大王！'; trophyEmoji.textContent = '🥇'; }
+        else if (score >= 30) { endTitle.textContent = '不錯嘛！'; trophyEmoji.textContent = '👍'; }
+        else { endTitle.textContent = '攤位打烊啦！'; trophyEmoji.textContent = '😅'; }
+
+        gameOverEl.style.display = 'flex';
+    }
+
+    window.onload = startGame;
     </script>
 </body>
 </html>

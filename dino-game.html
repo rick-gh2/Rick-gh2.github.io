@@ -3,87 +3,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🦕 Google 小恐龍遊戲 - 小蝦特製版</title>
+    <title>🦖 霸王龍快跑！- 小蝦特製版</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * { margin:0; padding:0; box-sizing:border-box; }
         body {
-            background: #f7f7f7;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            font-family: 'Courier New', monospace;
-            overflow: hidden;
+            background:#2d2d2d;
+            display:flex;justify-content:center;align-items:center;
+            min-height:100vh;font-family:'Courier New',monospace;
+            overflow:hidden;
         }
         #game-container {
-            position: relative;
-            width: 800px;
-            max-width: 95vw;
+            position:relative;width:800px;max-width:96vw;
         }
         canvas {
-            display: block;
-            width: 100%;
-            border-radius: 12px;
-            background: #fff;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            display:block;width:100%;border-radius:14px;
+            background:#f7f7f7;box-shadow:0 8px 40px rgba(0,0,0,0.4);
+            image-rendering:pixelated;
         }
         #ui-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            display: flex;
-            justify-content: space-between;
-            padding: 15px 20px;
-            pointer-events: none;
-            z-index: 10;
+            position:absolute;top:0;left:0;width:100%;
+            display:flex;justify-content:space-between;align-items:flex-start;
+            padding:18px 22px;pointer-events:none;z-index:10;
         }
-        #score { font-size: 20px; font-weight: bold; color: #535353; }
-        #high-score { font-size: 18px; color: #999; }
-        #game-over {
-            position: absolute; top: 50%; left: 50%;
-            transform: translate(-50%, -50%); text-align: center;
-            display: none; z-index: 20;
-        }
-        #game-over h1 { font-size: 36px; color: #535353; margin-bottom: 10px; }
-        #game-over p { font-size: 16px; color: #777; }
-        #start-screen {
-            position: absolute; top: 50%; left: 50%;
-            transform: translate(-50%, -50%); text-align: center; z-index: 20;
-        }
-        #start-screen h1 { font-size: 28px; color: #535353; margin-bottom: 15px; }
-        #start-screen p { font-size: 16px; color: #777; margin: 8px 0; }
-        .blink { animation: blink 1s infinite; color: #535353; font-size: 18px; margin-top: 20px; }
-        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+        .ui-block { font-size:18px;font-weight:bold;color:#535353;text-shadow:1px 1px 0 #f7f7f7; }
+        .hi-score { font-size:16px;color:#999;text-shadow:1px 1px 0 #f7f7f7; }
         #night-mode {
-            position: absolute; top: 15px; right: 20px;
-            font-size: 24px; cursor: pointer; z-index: 15;
+            position:absolute;top:18px;right:22px;
+            font-size:26px;cursor:pointer;z-index:15;
+            filter:drop-shadow(1px 1px 0 rgba(0,0,0,0.2));
         }
-        #mobile-controls { display: none; justify-content: space-around; margin-top: 15px; }
+        #game-over,#start-screen {
+            position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+            text-align:center;z-index:20;
+        }
+        #game-over { display:none; }
+        #game-over h1 { font-size:32px;color:#535353;margin-bottom:12px; }
+        #game-over p { font-size:15px;color:#777;margin:6px 0; }
+        .final-score-big { font-size:40px;font-weight:900;color:#535353;margin:10px 0; }
+        #start-screen h1 {
+            font-size:26px;color:#535353;margin-bottom:18px;
+            font-family:'Press Start 2P',monospace;
+        }
+        #start-screen p { font-size:14px;color:#777;margin:8px 0; }
+        .blink { animation:blink 1s infinite;color:#535353;font-size:16px;margin-top:24px;font-weight:bold; }
+        @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+        #mobile-controls { display:none;justify-content:space-around;margin-top:16px;gap:16px; }
         .mobile-btn {
-            width: 70px; height: 70px; border-radius: 50%;
-            background: #535353; color: white; font-size: 28px;
-            border: none; cursor: pointer; touch-action: manipulation;
+            width:78px;height:78px;border-radius:50%;background:#535353;
+            color:white;font-size:30px;border:none;cursor:pointer;
+            touch-action:manipulation;transition:all 0.15s;
+            box-shadow:0 4px 12px rgba(0,0,0,0.3);
         }
-        @media (max-width: 600px) { #mobile-controls{display:flex} #night-mode{display:none} }
+        .mobile-btn:active { transform:scale(0.9);background:#333; }
+        @media(max-width:600px){
+            #mobile-controls{display:flex}#night-mode{display:none}
+            #start-screen h1{font-size:18px;}
+        }
+        .pixel-border {
+            border:4px solid #535353;border-radius:4px;
+            box-shadow:4px 4px 0 rgba(0,0,0,0.2);
+        }
     </style>
 </head>
 <body>
     <div id="game-container">
         <canvas id="game" width="800" height="300"></canvas>
         <div id="ui-overlay">
-            <div><span id="score">00000</span><span id="high-score">HI 00000</span></div>
+            <div>
+                <span class="ui-block" id="score">00000</span>
+                <span class="hi-score" id="high-score">HI 00000</span>
+            </div>
             <span id="night-mode" onclick="toggleNight()">🌙</span>
         </div>
         <div id="start-screen">
-            <h1>🦕 小恐龍快跑！</h1>
-            <p>按 <b>空白鍵</b> 或 <b>上箭頭</b> 跳躍</p>
-            <p>按 <b>下箭頭</b> 蹲下</p>
+            <h1>🦖 霸王龍快跑！</h1>
+            <p class="pixel-border" style="display:inline-block;padding:12px 24px;background:rgba(0,0,0,0.05);border-radius:8px;">
+                按 <b>空白鍵</b> 或 <b>上箭頭</b> 跳躍<br>
+                按 <b>下箭頭</b> 蹲下<br>
+                避開仙人掌和翼龍！
+            </p>
             <p class="blink">按空白鍵開始遊戲！</p>
         </div>
         <div id="game-over">
-            <h1>遊戲結束！</h1>
-            <p id="final-score">得分：0</p>
+            <h1>💀 遊戲結束！</h1>
+            <div class="final-score-big" id="final-score">0</div>
             <p>按空白鍵再玩一次</p>
         </div>
         <div id="mobile-controls">
@@ -92,81 +96,160 @@
         </div>
     </div>
     <script>
-    const canvas = document.getElementById('game');
-    const ctx = canvas.getContext('2d');
-    const W = 800, H = 300;
-    let gameRunning = false, gameOver = false, score = 0, highScore = parseInt(localStorage.getItem('dinoHighScore')) || 0;
-    let speed = 6, nightMode = false, frameCount = 0;
-    const GROUND_Y = H - 50;
-    document.getElementById('high-score').textContent = `HI ${String(highScore).padStart(5,'0')}`;
+    const canvas=document.getElementById('game');
+    const ctx=canvas.getContext('2d');
+    const W=800,H=300;
+    let gameRunning=false,gameOverState=false,score=0,highScore=parseInt(localStorage.getItem('dinoHighScore'))||0;
+    let speed=6,nightMode=false,frameCount=0;
+    const GROUND_Y=H-50;
+    document.getElementById('high-score').textContent=`HI ${String(highScore).padStart(5,'0')}`;
 
-    const dino = { x:50, y:GROUND_Y, w:44, h:48, vy:0, grav:0.6, jumpF:-12, jumping:false, ducking:false, legFrame:0, legTimer:0 };
-    let obstacles = [], obsTimer = 0;
-    let clouds = [], stars = [];
+    // ===== 音效系統 =====
+    let audioCtx2;
+    function initAudio2(){if(!audioCtx2)audioCtx2=new(window.AudioContext||window.webkitAudioContext)();}
+    function sfx(freq,dur,type='square',vol=0.1){
+        if(!audioCtx2)return;try{
+            const o=audioCtx2.createOscillator(),g=audioCtx2.createGain();
+            o.type=type;o.frequency.setValueAtTime(freq,audioCtx2.currentTime);
+            g.gain.setValueAtTime(vol,audioCtx2.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.001,audioCtx2.currentTime+dur);
+            o.connect(g);g.connect(audioCtx2.destination);o.start();o.stop(audioCtx2.currentTime+dur);
+        }catch(e){}
+    }
 
-    for(let i=0;i<5;i++) clouds.push({x:Math.random()*W, y:30+Math.random()*80, w:40+Math.random()*30, s:0.5+Math.random()*0.5});
-    for(let i=0;i<30;i++) stars.push({x:Math.random()*W, y:Math.random()*(H-100), s:1+Math.random()*2, t:Math.random()*Math.PI*2});
+    // ===== 高品質像素恐龍 (16x16 像素風格) =====
+    const dino={x:55,y:GROUND_Y,w:44,h:48,vy:0,grav:0.65,jumpF:-12.5,jumping:false,ducking:false,legFrame:0,legTimer:0};
 
-    function drawDino(){
-        const c = nightMode?'#e0e0e0':'#535353';
-        const dh = dino.ducking?30:dino.h, dy = dino.y-dh, dw = dino.ducking?58:dino.w;
+    // 恐龍像素資料 (16x16 网格，每格 3px)
+    const DINO_PNG=''; // 使用 canvas 繪製像素圖
+
+    function drawPixelDino(x,y,ducking,night){
+        const s=3,c=night?'#e0e0e0':'#535353';
         ctx.fillStyle=c;
-        ctx.fillRect(dino.x+10,dy+8,24,dh-16);
-        ctx.fillRect(dino.x+22,dy,20,20);
-        ctx.fillStyle=nightMode?'#333':'#fff';
-        ctx.fillRect(dino.x+34,dy+4,4,4);
-        ctx.fillStyle=c;
-        ctx.fillRect(dino.x+36,dy+14,8,2);
-        ctx.fillRect(dino.x+20,dy+18,8,4);
-        ctx.fillRect(dino.x+2,dy+12,10,6);
-        if(dino.jumping||!gameRunning){
-            ctx.fillRect(dino.x+14,dy+dh-8,6,8); ctx.fillRect(dino.x+26,dy+dh-8,6,8);
+        if(ducking){
+            // 蹲下姿勢 - 更寬更扁
+            const px=x,py=y-24;
+            // 身體
+            fillRect(px,py+4,16*s,6*s,c);
+            // 頭
+            fillRect(px+12*s,py,8*s,5*s,c);
+            // 眼睛
+            ctx.fillStyle=night?'#1a1a2e':'#f7f7f7';
+            fillRect(px+18*s,py+s,s,s,c.replace('#','rgba(').replace('535353','255,255,255').replace('e0e0e0','0,0,0'));
+            // 腿
+            dino.legTimer++;if(dino.legTimer>8){dino.legTimer=0;dino.legFrame=1-dino.legFrame;}
+            fillRect(px+4*s,py+10*s,3*s,14*s,c);
+            fillRect(px+10*s,py+10*s,3*s,14*s,c);
+            if(dino.legFrame)fillRect(px+4*s,py+10*s,3*s,8*s,c);
         } else {
-            dino.legTimer++;
-            if(dino.legTimer>8){dino.legTimer=0; dino.legFrame=1-dino.legFrame;}
-            if(dino.legFrame===0){
-                ctx.fillRect(dino.x+14,dy+dh-8,6,8); ctx.fillRect(dino.x+26,dy+dh-12,6,4);
+            // 站立姿勢
+            const px=x,py=y-dino.h;
+            // 頭部
+            fillRect(px+20,py,24,20,c);
+            // 眼睛（白底黑瞳孔）
+            ctx.fillStyle=night?'#1a1a2e':'#f7f7f7';
+            fillRect(px+34,py+4,6,6,c);
+            ctx.fillStyle=c;
+            fillRect(px+36,py+6,3,3,'#000');
+            // 嘴巴
+            fillRect(px+44,py+14,10,4,c);
+            // 身體
+            fillRect(px+12,py+20,24,dino.h-28,c);
+            // 小手臂
+            fillRect(px+10,py+28,6,10,c);
+            // 尾巴
+            fillRect(px-2,py+24,14,8,c);
+            fillRect(px-8,py+20,8,8,c);
+            // 腿
+            if(dino.jumping||!gameRunning){
+                fillRect(px+16,py+dino.h-8,8,8,c);
+                fillRect(px+28,py+dino.h-8,8,8,c);
             } else {
-                ctx.fillRect(dino.x+14,dy+dh-12,6,4); ctx.fillRect(dino.x+26,dy+dh-8,6,8);
+                dino.legTimer++;if(dino.legTimer>8){dino.legTimer=0;dino.legFrame=1-dino.legFrame;}
+                if(dino.legFrame===0){
+                    fillRect(px+16,py+dino.h-8,8,8,c);
+                    fillRect(px+28,py+dino.h-12,8,4,c);
+                } else {
+                    fillRect(px+16,py+dino.h-12,8,4,c);
+                    fillRect(px+28,py+dino.h-8,8,8,c);
+                }
             }
         }
     }
 
-    function drawCactus(o){
-        ctx.fillStyle=nightMode?'#9b9b9b':'#535353';
+    function fillRect(x,y,w,h,color){ctx.fillStyle=color;ctx.fillRect(x,y,w,h);}
+
+    // 仙人掌像素繪製
+    function drawPixelCactus(o){
+        const c=night?'#8a8a8a':'#535353';
+        ctx.fillStyle=c;
         if(o.type==='small'){
-            ctx.fillRect(o.x+4,o.y-30,8,30); ctx.fillRect(o.x,o.y-22,4,12); ctx.fillRect(o.x+12,o.y-18,4,10);
+            fillRect(o.x+4,GROUND_Y-30,8,30,c);
+            fillRect(o.x,GROUND_Y-22,4,12,c);
+            fillRect(o.x+12,GROUND_Y-18,4,10,c);
+            // 頂部圓潤
+            fillRect(o.x+4,GROUND_Y-32,8,3,c);
         } else if(o.type==='large'){
-            ctx.fillRect(o.x+6,o.y-45,14,45); ctx.fillRect(o.x,o.y-34,6,16); ctx.fillRect(o.x+20,o.y-30,6,12);
+            fillRect(o.x+6,GROUND_Y-45,14,45,c);
+            fillRect(o.x,GROUND_Y-34,6,16,c);
+            fillRect(o.x+20,GROUND_Y-30,6,12,c);
+            fillRect(o.x+6,GROUND_Y-47,14,3,c);
+            // 紋理
+            ctx.fillStyle=night?'#777':'#666';
+            fillRect(o.x+10,GROUND_Y-40,2,2,c.replace('#','rgba(').replace('8a8a8a','138,138,138').replace('666','102,102,102'));
+            fillRect(o.x+12,GROUND_Y-25,2,2,c.replace('#','rgba(').replace('8a8a8a','138,138,138').replace('666','102,102,102'));
         } else {
-            for(let i=0;i<3;i++) ctx.fillRect(o.x+i*14+2,o.y-30-i*5,8,30+i*5);
+            for(let i=0;i<3;i++){
+                fillRect(o.x+i*14+2,GROUND_Y-30-i*5,8,30+i*5,c);
+                fillRect(o.x+i*14+2,GROUND_Y-32-i*5,8,3,c);
+            }
         }
     }
 
-    function drawPtero(o){
-        ctx.fillStyle=nightMode?'#9b9b9b':'#535353';
-        let pf=pterodactylFrame||0; pf++; if(pf>15)pf=0; pterodactylFrame=pf;
-        ctx.fillRect(o.x+8,o.y+8,30,10); ctx.fillRect(o.x+34,o.y+6,16,8); ctx.fillRect(o.x+46,o.y+10,10,4);
-        if(pf<8) ctx.fillRect(o.x+10,o.y-6,20,8); else ctx.fillRect(o.x+10,o.y+18,20,8);
+    function drawPixelPtero(o){
+        const c=night?'#8a8a8a':'#535353';
+        ctx.fillStyle=c;
+        let pf=pterodactylFrame||0;pf++;if(pf>15)pf=0;pterodactylFrame=pf;
+        // 身體
+        fillRect(o.x+8,o.y+8,30,10,c);
+        // 頭部
+        fillRect(o.x+34,o.y+6,16,8,c);
+        // 嘴巴
+        fillRect(o.x+46,o.y+10,10,4,c);
+        // 翅膀
+        if(pf<8)fillRect(o.x+10,o.y-6,20,8,c);
+        else fillRect(o.x+10,o.y+18,20,8,c);
+        // 眼睛
+        ctx.fillStyle=night?'#ff6b6b':'#e74c3c';
+        fillRect(o.x+44,o.y+8,3,3,c.replace('#','rgba(').replace('ff6b6b','231,76,60').replace('e74c3c','231,76,60'));
     }
 
+    // 地面
     function drawGround(){
-        ctx.fillStyle=nightMode?'#666':'#535353';
+        const c=night?'#666':'#535353';
+        ctx.fillStyle=c;
         ctx.fillRect(0,GROUND_Y+10,W,2);
-        for(let i=0;i<20;i++){
-            const bx=((i*50-frameCount*speed*0.3)%W+W)%W;
-            if(i%3===0) ctx.fillRect(bx,GROUND_Y+14,15,2);
+        for(let i=0;i<25;i++){
+            const bx=((i*45-frameCount*speed*0.3)%W+W)%W;
+            if(i%3===0)ctx.fillRect(bx,GROUND_Y+14,15,2);
+            if(i%7===0)ctx.fillRect(bx+8,GROUND_Y+18,8,1);
         }
     }
+
+    // 雲朵
+    let clouds=[],stars=[];
+    for(let i=0;i<5;i++)clouds.push({x:Math.random()*W,y:30+Math.random()*80,w:40+Math.random()*30,s:0.5+Math.random()*0.5});
+    for(let i=0;i<30;i++)stars.push({x:Math.random()*W,y:Math.random()*(H-100),s:1+Math.random()*2,t:Math.random()*Math.PI*2});
 
     function drawClouds(){
-        ctx.fillStyle=nightMode?'#444':'#e0e0e0';
-        clouds.forEach(c=>{
+        const c=night?'#444':'#e0e0e0';
+        ctx.fillStyle=c;
+        clouds.forEach(cld=>{
             ctx.beginPath();
-            ctx.arc(c.x,c.y,c.w*0.25,0,Math.PI*2);
-            ctx.arc(c.x+15,c.y-5,c.w*0.2,0,Math.PI*2);
-            ctx.arc(c.x+25,c.y,c.w*0.22,0,Math.PI*2);
-            ctx.arc(c.x+12,c.y+3,c.w*0.18,0,Math.PI*2);
+            ctx.arc(cld.x,cld.y,cld.w*0.25,0,Math.PI*2);
+            ctx.arc(cld.x+15,cld.y-5,cld.w*0.2,0,Math.PI*2);
+            ctx.arc(cld.x+25,cld.y,cld.w*0.22,0,Math.PI*2);
+            ctx.arc(cld.x+12,cld.y+3,cld.w*0.18,0,Math.PI*2);
             ctx.fill();
         });
     }
@@ -174,37 +257,39 @@
     function drawStars(){
         if(!nightMode)return;
         stars.forEach(s=>{
-            s.t+=0.05;
-            const a=0.3+Math.sin(s.t)*0.3;
+            s.t+=0.05;const a=0.3+Math.sin(s.t)*0.3;
             ctx.fillStyle=`rgba(255,255,255,${a})`;
             ctx.fillRect(s.x,s.y,s.s,s.s);
         });
     }
 
     let pterodactylFrame=0;
+    let obstacles=[];
+
     function spawnObs(){
         const types=['small','large','group'];
         const type=types[Math.floor(Math.random()*types.length)];
         let o={x:W,type:speed};
         if(Math.random()<0.2&&score>200){
-            o.type='pterodactyl'; o.y=GROUND_Y-20-Math.random()*50; o.w=50; o.h=20;
+            o.type='pterodactyl';o.y=GROUND_Y-20-Math.random()*50;o.w=50;o.h=20;
         } else if(type==='small'){o.y=GROUND_Y;o.w=16;o.h=30;}
         else if(type==='large'){o.y=GROUND_Y;o.w=26;o.h=45;}
         else{o.y=GROUND_Y;o.w=40;o.h=35;}
         obstacles.push(o);
     }
 
+    let obsTimer=0;
     function update(){
-        if(!gameRunning||gameOver)return;
+        if(!gameRunning||gameOverState)return;
         frameCount++;
         if(frameCount%6===0){
             score++;
             document.getElementById('score').textContent=String(score).padStart(5,'0');
-            if(score%100===0) speed+=0.5;
-            if(score>0&&score%500===0) nightMode=!nightMode;
+            if(score%100===0)speed+=0.5;
+            if(score>0&&score%500===0)nightMode=!nightMode;
         }
         if(dino.jumping){
-            dino.vy+=dino.grav; dino.y+=dino.vy;
+            dino.vy+=dino.grav;dino.y+=dino.vy;
             if(dino.y>=GROUND_Y){dino.y=GROUND_Y;dino.jumping=false;dino.vy=0;}
         }
         obsTimer++;
@@ -213,9 +298,13 @@
         obstacles=obstacles.filter(o=>o.x>-60);
         clouds.forEach(c=>{c.x-=c.s;if(c.x<-60){c.x=W+20;c.y=30+Math.random()*80;}});
 
-        const dx=dino.x+14,dw=dino.ducking?58:24,dy=dino.y-(dino.ducking?30:dino.h),dh=dino.ducking?30:dino.h;
+        // 碰撞
+        const dx=dino.x+14,dw=dino.ducking?58:24;
+        const dy=dino.y-(dino.ducking?24:dino.h),dh=dino.ducking?24:dino.h;
         for(const o of obstacles){
-            const ox=o.x+4,ow=(o.w||30)-8,oy=(o.type==='pterodactyl'?o.y:GROUND_Y)-(o.h||30),oh=o.h||30;
+            const ox=o.x+4,ow=(o.w||30)-8;
+            const oy=(o.type==='pterodactyl'?o.y:GROUND_Y)-(o.h||30);
+            const oh=o.h||30;
             if(dx<ox+ow&&dx+dw>ox&&dy<oy+oh&&dy+dh>oy){endGame();return;}
         }
     }
@@ -223,30 +312,33 @@
     function draw(){
         ctx.fillStyle=nightMode?'#1a1a2e':'#f7f7f7';
         ctx.fillRect(0,0,W,H);
-        drawStars(); drawClouds(); drawGround();
-        obstacles.forEach(o=>{if(o.type==='pterodactyl')drawPtero(o);else drawCactus(o);});
-        drawDino();
+        drawStars();drawClouds();drawGround();
+        obstacles.forEach(o=>{if(o.type==='pterodactyl')drawPixelPtero(o);else drawPixelCactus(o);});
+        drawPixelDino(dino.x,dino.y,dino.ducking,nightMode);
     }
 
     function gameLoop(){update();draw();requestAnimationFrame(gameLoop);}
+
     function startGame(){
-        gameRunning=true;gameOver=false;score=0;speed=6;obstacles=[];obsTimer=0;
+        initAudio2();
+        gameRunning=true;gameOverState=false;score=0;speed=6;obstacles=[];obsTimer=0;
         dino.y=GROUND_Y;dino.jumping=false;dino.ducking=false;dino.vy=0;nightMode=false;
         document.getElementById('start-screen').style.display='none';
         document.getElementById('game-over').style.display='none';
         document.getElementById('score').textContent='00000';
     }
     function endGame(){
-        gameOver=true;gameRunning=false;
+        gameOverState=true;gameRunning=false;
         if(score>highScore){highScore=score;localStorage.setItem('dinoHighScore',highScore);document.getElementById('high-score').textContent=`HI ${String(highScore).padStart(5,'0')}`;}
-        document.getElementById('final-score').textContent=`得分：${score}`;
+        document.getElementById('final-score').textContent=score;
         document.getElementById('game-over').style.display='block';
+        sfx(200,0.5,'sawtooth',0.15);sfx(100,0.6,'square',0.1);
     }
     function jump(){
-        if(!gameRunning&&!gameOver||gameOver){startGame();return;}
-        if(!dino.jumping){dino.jumping=true;dino.vy=dino.jumpF;}
+        if(!gameRunning&&!gameOverState||gameOverState){startGame();return;}
+        if(!dino.jumping){dino.jumping=true;dino.vy=dino.jumpF;sfx(500,0.1,'square',0.08);}
     }
-    function duck(a){if(gameRunning&&!gameOver)dino.ducking=a;}
+    function duck(a){if(gameRunning&&!gameOverState)dino.ducking=a;}
     function toggleNight(){nightMode=!nightMode;document.getElementById('night-mode').textContent=nightMode?'☀️':'🌙';}
 
     document.addEventListener('keydown',e=>{
