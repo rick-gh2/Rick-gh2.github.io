@@ -4,100 +4,157 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>小蝦的網頁世界 🦐</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg-primary: #06060f;
+            --bg-card: rgba(255, 255, 255, 0.04);
+            --border-card: rgba(255, 255, 255, 0.08);
+            --text-primary: #f0f0f5;
+            --text-secondary: rgba(255, 255, 255, 0.55);
+            --accent-1: #ff6b9d;
+            --accent-2: #c084fc;
+            --accent-3: #48dbfb;
+            --accent-4: #feca57;
+            --accent-5: #ff9ff3;
+            --glow-1: rgba(255, 107, 157, 0.25);
+            --glow-2: rgba(192, 132, 252, 0.25);
+            --radius: 24px;
+        }
+
         body {
-            font-family: 'Microsoft JhengHei', 'Arial', sans-serif;
-            background: #0a0a1a;
+            font-family: 'Noto Sans TC', 'Space Grotesk', 'Microsoft JhengHei', sans-serif;
+            background: var(--bg-primary);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            overflow: hidden;
+            overflow-x: hidden;
             position: relative;
+            color: var(--text-primary);
         }
 
+        /* ====== Canvas & Glow ====== */
         #particles {
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
             z-index: 0;
+            pointer-events: none;
         }
 
-        /* 音樂控制按鈕 */
+        .glow-orb {
+            position: fixed;
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0.12;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .glow-orb.g1 { top: -200px; left: -100px; background: var(--accent-1); animation: orbDrift1 14s ease-in-out infinite; }
+        .glow-orb.g2 { bottom: -250px; right: -150px; background: var(--accent-3); animation: orbDrift2 16s ease-in-out infinite; }
+        .glow-orb.g3 { top: 40%; left: 60%; background: var(--accent-2); animation: orbDrift3 20s ease-in-out infinite; }
+        .glow-orb.g4 { top: 60%; left: 10%; background: var(--accent-4); width: 350px; height: 350px; opacity: 0.07; animation: orbDrift4 18s ease-in-out infinite; }
+
+        @keyframes orbDrift1 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(120px,80px)} }
+        @keyframes orbDrift2 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-100px,-90px)} }
+        @keyframes orbDrift3 { 0%,100%{transform:translate(-50%,-50%) scale(1)} 50%{transform:translate(-40%,-60%) scale(1.3)} }
+        @keyframes orbDrift4 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(60px,70px)} }
+
+        /* ====== Music Toggle ====== */
         .music-toggle {
             position: fixed;
-            top: 20px;
-            right: 20px;
+            top: 24px;
+            right: 24px;
             z-index: 100;
-            width: 48px;
-            height: 48px;
+            width: 52px;
+            height: 52px;
             border-radius: 50%;
-            border: 2px solid rgba(255,255,255,0.3);
-            background: rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.12);
+            background: rgba(255,255,255,0.06);
+            backdrop-filter: blur(16px) saturate(1.5);
+            -webkit-backdrop-filter: blur(16px) saturate(1.5);
             cursor: pointer;
-            font-size: 1.4rem;
+            font-size: 1.3rem;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.3s ease;
+            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
             color: white;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.3);
         }
-
         .music-toggle:hover {
-            background: rgba(255,255,255,0.2);
-            border-color: rgba(255,255,255,0.5);
-            transform: scale(1.1);
+            background: rgba(255,255,255,0.14);
+            border-color: rgba(255,255,255,0.25);
+            transform: scale(1.08);
+            box-shadow: 0 6px 32px rgba(0,0,0,0.4);
         }
-
         .music-toggle.playing .bar {
-            animation: barPulse 0.6s ease-in-out infinite alternate;
+            animation: barPulse 0.55s ease-in-out infinite alternate;
         }
-
         .music-toggle .bar {
             display: inline-block;
             width: 3px;
-            margin: 0 1px;
-            height: 16px;
+            margin: 0 1.5px;
+            height: 18px;
             background: white;
             border-radius: 2px;
-            animation: barPulse 0.6s ease-in-out infinite alternate;
+            animation: barPulse 0.55s ease-in-out infinite alternate;
         }
-
         .music-toggle .bar:nth-child(1) { animation-delay: 0s; }
-        .music-toggle .bar:nth-child(2) { animation-delay: 0.15s; }
-        .music-toggle .bar:nth-child(3) { animation-delay: 0.3s; }
-        .music-toggle .bar:nth-child(4) { animation-delay: 0.45s; }
+        .music-toggle .bar:nth-child(2) { animation-delay: 0.14s; }
+        .music-toggle .bar:nth-child(3) { animation-delay: 0.28s; }
+        .music-toggle .bar:nth-child(4) { animation-delay: 0.42s; }
 
-        @keyframes barPulse {
-            from { height: 6px; }
-            to { height: 18px; }
-        }
+        @keyframes barPulse { from { height: 6px; } to { height: 20px; } }
 
         .music-toggle.paused .bar {
             animation: none;
             height: 4px;
-            opacity: 0.4;
+            opacity: 0.35;
         }
 
-        .title-wrapper {
+        /* ====== Header ====== */
+        .header {
             position: relative;
             z-index: 1;
             text-align: center;
+            margin-bottom: 48px;
+            margin-top: 20px;
+        }
+
+        .header-emoji {
+            font-size: 3.5rem;
+            display: block;
+            margin-bottom: 12px;
+            animation: headerBounce 2.5s ease-in-out infinite;
+        }
+
+        @keyframes headerBounce {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-10px) scale(1.05); }
         }
 
         .title {
-            font-size: 3rem;
-            font-weight: bold;
-            background: linear-gradient(90deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3, #54a0ff, #ff6b6b);
-            background-size: 300% 100%;
+            font-size: clamp(2rem, 5vw, 3.2rem);
+            font-weight: 900;
+            letter-spacing: -0.02em;
+            line-height: 1.2;
+            background: linear-gradient(135deg, var(--accent-1), var(--accent-2), var(--accent-3), var(--accent-4), var(--accent-5), var(--accent-1));
+            background-size: 400% 400%;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            animation: gradientShift 3s ease infinite, bounceIn 1s ease;
-            margin-bottom: 10px;
+            background-clip: text;
+            animation: gradientShift 6s ease infinite;
+            margin-bottom: 14px;
+            text-shadow: none;
         }
 
         @keyframes gradientShift {
@@ -106,290 +163,361 @@
             100% { background-position: 0% 50%; }
         }
 
-        @keyframes bounceIn {
-            0% { transform: scale(0.3); opacity: 0; }
-            50% { transform: scale(1.05); }
-            70% { transform: scale(0.9); }
-            100% { transform: scale(1); opacity: 1; }
-        }
-
         .subtitle {
-            color: rgba(255,255,255,0.6);
-            font-size: 1.1rem;
-            margin-bottom: 50px;
-            animation: fadeInUp 1s ease 0.5s both;
+            color: var(--text-secondary);
+            font-size: clamp(0.95rem, 2vw, 1.15rem);
+            font-weight: 300;
+            letter-spacing: 0.04em;
+            animation: fadeUp 1s ease 0.3s both;
             position: relative;
+            display: inline-block;
         }
 
         .subtitle::after {
             content: '';
             display: inline-block;
-            width: 3px;
-            height: 1.2em;
-            background: #48dbfb;
-            margin-left: 5px;
+            width: 2px;
+            height: 1.1em;
+            background: var(--accent-3);
+            margin-left: 4px;
             vertical-align: middle;
-            animation: blink 0.8s step-end infinite;
+            animation: blink 0.9s step-end infinite;
         }
 
-        @keyframes blink {
-            50% { opacity: 0; }
-        }
+        @keyframes blink { 50% { opacity: 0; } }
 
-        @keyframes fadeInUp {
-            from { transform: translateY(20px); opacity: 0; }
+        @keyframes fadeUp {
+            from { transform: translateY(18px); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
         }
 
+        /* ====== Nav Grid ====== */
         .nav-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
+            grid-template-columns: repeat(3, 1fr);
             gap: 20px;
-            max-width: 1050px;
-            width: 90%;
+            max-width: 880px;
+            width: calc(100% - 40px);
             position: relative;
             z-index: 1;
         }
 
         .nav-card {
             position: relative;
-            background: rgba(255,255,255,0.05);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 20px;
-            padding: 35px 20px;
+            background: var(--bg-card);
+            backdrop-filter: blur(20px) saturate(1.3);
+            -webkit-backdrop-filter: blur(20px) saturate(1.3);
+            border: 1px solid var(--border-card);
+            border-radius: var(--radius);
+            padding: 36px 24px 32px;
             text-align: center;
             cursor: pointer;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
             text-decoration: none;
-            color: white;
-            display: block;
+            color: var(--text-primary);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
             overflow: hidden;
+            min-height: 170px;
+            isolation: isolate;
         }
 
         .nav-card::before {
             content: '';
             position: absolute;
-            top: -50%; left: -50%;
-            width: 200%; height: 200%;
-            background: conic-gradient(transparent, rgba(255,255,255,0.1), transparent 30%);
-            animation: rotate 4s linear infinite;
+            inset: 0;
+            border-radius: var(--radius);
+            background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, transparent 60%);
             opacity: 0;
-            transition: opacity 0.3s;
-        }
-
-        .nav-card:hover::before { opacity: 1; }
-
-        @keyframes rotate {
-            100% { transform: rotate(360deg); }
+            transition: opacity 0.4s ease;
         }
 
         .nav-card::after {
             content: '';
             position: absolute;
-            inset: 1px;
-            background: rgba(15, 15, 30, 0.9);
-            border-radius: 19px;
-            z-index: 0;
+            inset: 0;
+            border-radius: var(--radius);
+            background: var(--card-glow, transparent);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            z-index: -1;
         }
 
         .nav-card:hover {
-            transform: translateY(-12px) scale(1.05);
-            border-color: rgba(255,255,255,0.3);
+            transform: translateY(-8px);
+            border-color: rgba(255,255,255,0.18);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3), 0 0 40px var(--card-glow, transparent);
         }
+
+        .nav-card:hover::before { opacity: 1; }
+        .nav-card:hover::after { opacity: 1; }
 
         .nav-card > * { position: relative; z-index: 1; }
 
-        .nav-card:nth-child(1):hover { box-shadow: 0 20px 60px rgba(255,107,107,0.3); border-color: rgba(255,107,107,0.4); }
-        .nav-card:nth-child(2):hover { box-shadow: 0 20px 60px rgba(72,219,251,0.3); border-color: rgba(72,219,251,0.4); }
-        .nav-card:nth-child(3):hover { box-shadow: 0 20px 60px rgba(84,160,255,0.3); border-color: rgba(84,160,255,0.4); }
-        .nav-card:nth-child(5):hover { box-shadow: 0 20px 60px rgba(46,204,113,0.3); border-color: rgba(46,204,113,0.4); }
+        /* Per-card accent */
+        .nav-card[data-accent="rose"]    { --card-glow: rgba(255,107,157,0.12); }
+        .nav-card[data-accent="purple"]   { --card-glow: rgba(192,132,252,0.12); }
+        .nav-card[data-accent="cyan"]     { --card-glow: rgba(72,219,251,0.12); }
+        .nav-card[data-accent="yellow"]   { --card-glow: rgba(254,202,87,0.12); }
+        .nav-card[data-accent="pink"]     { --card-glow: rgba(255,159,243,0.12); }
+        .nav-card[data-accent="green"]    { --card-glow: rgba(46,204,113,0.12); }
+        .nav-card[data-accent="orange"]   { --card-glow: rgba(255,165,0,0.12); }
+        .nav-card[data-accent="blue"]     { --card-glow: rgba(99,179,237,0.12); }
+        .nav-card[data-accent="teal"]     { --card-glow: rgba(0,206,209,0.12); }
 
-        .nav-card .emoji {
-            font-size: 3.2rem;
-            display: block;
-            margin-bottom: 15px;
-            animation: float 3s ease-in-out infinite;
+        /* card icon ring */
+        .card-icon-wrap {
+            width: 68px;
+            height: 68px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+            position: relative;
+            transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
         }
 
-        .nav-card:nth-child(2) .emoji { animation-delay: 0.5s; }
-        .nav-card:nth-child(3) .emoji { animation-delay: 1s; }
-        .nav-card:nth-child(4) .emoji { animation-delay: 1.5s; }
+        .card-icon-wrap::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background: var(--ring-color, rgba(255,255,255,0.08));
+            transition: all 0.4s ease;
+        }
 
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-8px); }
+        .nav-card:hover .card-icon-wrap {
+            transform: scale(1.12);
+        }
+        .nav-card:hover .card-icon-wrap::before {
+            background: var(--ring-color-hover, rgba(255,255,255,0.15));
+        }
+
+        .nav-card .emoji {
+            font-size: 1.8rem;
+            position: relative;
+            z-index: 1;
+            line-height: 1;
         }
 
         .nav-card .label {
-            font-size: 1.25rem;
-            font-weight: bold;
-            margin-bottom: 8px;
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 6px;
+            letter-spacing: 0.01em;
         }
 
         .nav-card .desc {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            font-weight: 300;
+            letter-spacing: 0.02em;
+        }
+
+        .nav-card .card-arrow {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.06);
+            margin-top: 14px;
             font-size: 0.9rem;
-            opacity: 0.6;
-        }
-
-        .nav-card .arrow {
-            display: inline-block;
-            margin-top: 15px;
-            font-size: 1.5rem;
             opacity: 0;
-            transform: translateX(-10px);
-            transition: all 0.3s ease;
+            transform: translateX(-8px);
+            transition: all 0.35s cubic-bezier(0.22, 1, 0.36, 1);
         }
 
-        .nav-card:hover .arrow {
-            opacity: 1;
+        .nav-card:hover .card-arrow {
+            opacity: 0.8;
             transform: translateX(0);
+            background: rgba(255,255,255,0.12);
         }
 
+        /* ====== Footer ====== */
         .footer {
             position: fixed;
-            bottom: 25px;
-            color: rgba(255,255,255,0.3);
-            font-size: 0.85rem;
+            bottom: 28px;
+            color: rgba(255,255,255,0.2);
+            font-size: 0.82rem;
             z-index: 1;
-            animation: pulse 2s ease-in-out infinite;
+            font-weight: 300;
+            letter-spacing: 0.05em;
         }
 
-        @keyframes pulse {
-            0%, 100% { opacity: 0.3; }
-            50% { opacity: 0.6; }
-        }
-
-        .glow {
-            position: fixed;
-            width: 300px;
-            height: 300px;
-            border-radius: 50%;
-            filter: blur(100px);
-            opacity: 0.15;
-            pointer-events: none;
-            z-index: 0;
-        }
-        .glow-1 { top: -100px; left: -100px; background: #ff6b6b; animation: glowMove1 8s ease-in-out infinite; }
-        .glow-2 { bottom: -100px; right: -100px; background: #48dbfb; animation: glowMove2 10s ease-in-out infinite; }
-        .glow-3 { top: 50%; left: 50%; transform: translate(-50%,-50%); background: #ff9ff3; animation: glowMove3 12s ease-in-out infinite; }
-
-        @keyframes glowMove1 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(100px,100px)} }
-        @keyframes glowMove2 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-80px,-80px)} }
-        @keyframes glowMove3 { 0%,100%{transform:translate(-50%,-50%) scale(1)} 50%{transform:translate(-50%,-50%) scale(1.5)} }
-
-        /* 音樂提示浮層 */
+        /* ====== Music Hint ====== */
         .music-hint {
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(0,0,0,0.8);
+            background: rgba(0,0,0,0.75);
             color: white;
-            padding: 20px 40px;
-            border-radius: 16px;
-            font-size: 1.1rem;
+            padding: 18px 36px;
+            border-radius: 18px;
+            font-size: 1rem;
             z-index: 200;
-            animation: hintFade 3s ease forwards;
+            animation: hintAnim 2.8s ease forwards;
             pointer-events: none;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        @keyframes hintAnim {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.85); }
+            12% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            65% { opacity: 1; }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(1.05); }
         }
 
-        @keyframes hintFade {
-            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
-            15% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-            70% { opacity: 1; }
-            100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+        /* ====== Stagger card entrance ====== */
+        .nav-card { opacity: 0; transform: translateY(30px); }
+        .nav-card.visible {
+            animation: cardIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+        @keyframes cardIn {
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        @media (max-width: 500px) {
-            .title { font-size: 2rem; }
-            .nav-grid { gap: 15px; grid-template-columns: repeat(2, 1fr); }
-            .nav-card { padding: 25px 15px; }
-            .nav-card .emoji { font-size: 2.8rem; }
-            .music-toggle { width: 40px; height: 40px; font-size: 1.2rem; }
+        /* ====== Responsive ====== */
+        @media (max-width: 900px) {
+            .nav-grid { grid-template-columns: repeat(3, 1fr); gap: 16px; }
+            .nav-card { padding: 30px 18px 28px; min-height: 155px; }
+            .card-icon-wrap { width: 58px; height: 58px; }
+            .nav-card .emoji { font-size: 1.6rem; }
+        }
+
+        @media (max-width: 640px) {
+            .nav-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 14px;
+                width: calc(100% - 28px);
+            }
+            .nav-card {
+                padding: 28px 16px 26px;
+                min-height: 145px;
+            }
+            .card-icon-wrap { width: 52px; height: 52px; margin-bottom: 12px; }
+            .nav-card .emoji { font-size: 1.5rem; }
+            .nav-card .label { font-size: 1.05rem; }
+            .nav-card .desc { font-size: 0.78rem; }
+            .header { margin-bottom: 36px; }
+            .header-emoji { font-size: 2.8rem; }
+            .glow-orb { width: 350px; height: 350px; }
+        }
+
+        @media (max-width: 400px) {
+            .title { font-size: 1.7rem; }
+            .subtitle { font-size: 0.88rem; }
+            .nav-grid { gap: 12px; }
+            .music-toggle { width: 44px; height: 44px; top: 16px; right: 16px; }
         }
     </style>
 </head>
 <body>
     <canvas id="particles"></canvas>
-    <div class="glow glow-1"></div>
-    <div class="glow glow-2"></div>
-    <div class="glow glow-3"></div>
+    <div class="glow-orb g1"></div>
+    <div class="glow-orb g2"></div>
+    <div class="glow-orb g3"></div>
+    <div class="glow-orb g4"></div>
 
     <!-- 音樂控制按鈕 -->
-    <button class="music-toggle playing" id="musicBtn" onclick="toggleMusic()" title="背景音樂">
+    <button class="music-toggle paused" id="musicBtn" onclick="toggleMusic()" title="背景音樂">
         <span class="bar"></span>
         <span class="bar"></span>
         <span class="bar"></span>
         <span class="bar"></span>
     </button>
 
-    <div class="title-wrapper">
-        <h1 class="title">🦐 小蝦的網頁世界</h1>
+    <div class="header">
+        <span class="header-emoji">🦐</span>
+        <h1 class="title">小蝦的網頁世界</h1>
         <p class="subtitle">歡迎來到我的小天地～點開卡片探索吧！</p>
     </div>
 
     <div class="nav-grid">
-        <a href="date.html" class="nav-card">
-            <span class="emoji">💌</span>
+        <a href="date.html" class="nav-card" data-accent="rose">
+            <div class="card-icon-wrap" style="--ring-color: rgba(255,107,157,0.15); --ring-color-hover: rgba(255,107,157,0.25);">
+                <span class="emoji">💌</span>
+            </div>
             <div class="label">約會邀請</div>
             <div class="desc">一個重要的邀請...</div>
-            <span class="arrow">→</span>
+            <span class="card-arrow">↗</span>
         </a>
-        <a href="space.html" class="nav-card">
-            <span class="emoji">🚀</span>
+        <a href="space.html" class="nav-card" data-accent="cyan">
+            <div class="card-icon-wrap" style="--ring-color: rgba(72,219,251,0.15); --ring-color-hover: rgba(72,219,251,0.25);">
+                <span class="emoji">🚀</span>
+            </div>
             <div class="label">星戰異星戰機</div>
             <div class="desc">星際射擊小遊戲</div>
-            <span class="arrow">→</span>
+            <span class="card-arrow">↗</span>
         </a>
-        <a href="takoyaki.html" class="nav-card">
-            <span class="emoji">🐙</span>
+        <a href="takoyaki.html" class="nav-card" data-accent="orange">
+            <div class="card-icon-wrap" style="--ring-color: rgba(255,165,0,0.15); --ring-color-hover: rgba(255,165,0,0.25);">
+                <span class="emoji">🐙</span>
+            </div>
             <div class="label">瘋狂章魚燒</div>
             <div class="desc">趣味點擊小遊戲</div>
-            <span class="arrow">→</span>
+            <span class="card-arrow">↗</span>
         </a>
-        <a href="airforce.html" class="nav-card">
-            <span class="emoji">🛩️</span>
+        <a href="airforce.html" class="nav-card" data-accent="purple">
+            <div class="card-icon-wrap" style="--ring-color: rgba(192,132,252,0.15); --ring-color-hover: rgba(192,132,252,0.25);">
+                <span class="emoji">🛩️</span>
+            </div>
             <div class="label">小蝦空戰</div>
             <div class="desc">橫版捲軸空戰遊戲</div>
-            <span class="arrow">→</span>
+            <span class="card-arrow">↗</span>
         </a>
-        <a href="sorry.html" class="nav-card">
-            <span class="emoji">🐶</span>
+        <a href="sorry.html" class="nav-card" data-accent="green">
+            <div class="card-icon-wrap" style="--ring-color: rgba(46,204,113,0.15); --ring-color-hover: rgba(46,204,113,0.25);">
+                <span class="emoji">🐶</span>
+            </div>
             <div class="label">對不起</div>
             <div class="desc">原諒我吧～🥺</div>
-            <span class="arrow">→</span>
+            <span class="card-arrow">↗</span>
         </a>
-        <a href="guestbook.html" class="nav-card">
-            <span class="emoji">🐾</span>
+        <a href="guestbook.html" class="nav-card" data-accent="pink">
+            <div class="card-icon-wrap" style="--ring-color: rgba(255,159,243,0.15); --ring-color-hover: rgba(255,159,243,0.25);">
+                <span class="emoji">🐾</span>
+            </div>
             <div class="label">小蝦留言板</div>
             <div class="desc">留下你的足跡✨</div>
-            <span class="arrow">→</span>
+            <span class="card-arrow">↗</span>
         </a>
-        <a href="dino-game.html" class="nav-card">
-            <span class="emoji">🦖</span>
+        <a href="dino-game.html" class="nav-card" data-accent="yellow">
+            <div class="card-icon-wrap" style="--ring-color: rgba(254,202,87,0.15); --ring-color-hover: rgba(254,202,87,0.25);">
+                <span class="emoji">🦖</span>
+            </div>
             <div class="label">霸王龍遊戲</div>
             <div class="desc">經典爬蟲小遊戲</div>
-            <span class="arrow">→</span>
+            <span class="card-arrow">↗</span>
         </a>
-        <a href="videos.html" class="nav-card">
-            <span class="emoji">🎬</span>
+        <a href="videos.html" class="nav-card" data-accent="blue">
+            <div class="card-icon-wrap" style="--ring-color: rgba(99,179,237,0.15); --ring-color-hover: rgba(99,179,237,0.25);">
+                <span class="emoji">🎬</span>
+            </div>
             <div class="label">AI 影片館</div>
             <div class="desc">AI 生成影片展示</div>
-            <span class="arrow">→</span>
+            <span class="card-arrow">↗</span>
         </a>
-        <a href="cyberpunk_rainy_city.mp4" class="nav-card" target="_blank">
-            <span class="emoji">🌃</span>
+        <a href="cyberpunk_rainy_city.mp4" class="nav-card" target="_blank" data-accent="teal">
+            <div class="card-icon-wrap" style="--ring-color: rgba(0,206,209,0.15); --ring-color-hover: rgba(0,206,209,0.25);">
+                <span class="emoji">🌃</span>
+            </div>
             <div class="label">賽博朋克影片</div>
             <div class="desc">AI 生成 10 秒影片</div>
-            <span class="arrow">→</span>
+            <span class="card-arrow">↗</span>
         </a>
     </div>
 
-    <div class="footer">Powered by 🦐 小蝦 & GitHub Pages</div>
+    <div class="footer">Powered by 🦐 小蝦 &amp; GitHub Pages</div>
 
     <script>
-    // ===== 科技風背景音樂 =====
+    // ====== 科技風背景音樂 ======
     let musicCtx = null;
     let musicPlaying = false;
     let musicLoopId = null;
@@ -404,7 +532,6 @@
         master.gain.value = 0.12;
         master.connect(ctx.destination);
 
-        // 深低音
         const sub = ctx.createOscillator();
         sub.type = 'sine';
         sub.frequency.value = 55;
@@ -415,7 +542,6 @@
         sub.start(now);
         sub.stop(now + duration);
 
-        // 脈衝合成
         for (let i = 0; i < 16; i++) {
             const t = now + i * (duration / 16);
             const osc = ctx.createOscillator();
@@ -430,7 +556,6 @@
             osc.stop(t + 0.35);
         }
 
-        // 琶音
         const notes = [261.63, 329.63, 392.00, 523.25, 392.00, 329.63, 261.63, 196.00];
         const step = duration / (notes.length * 2);
         notes.forEach((freq, i) => {
@@ -450,7 +575,6 @@
             });
         });
 
-        // Glitch 音效
         for (let i = 0; i < 8; i++) {
             const t = now + Math.random() * duration;
             const bufSize = ctx.sampleRate * 0.1;
@@ -467,7 +591,6 @@
             noise.start(t);
         }
 
-        // Pad
         const pad = ctx.createOscillator();
         pad.type = 'triangle';
         pad.frequency.value = 130.81;
@@ -487,14 +610,12 @@
         lfo.start(now);
         lfo.stop(now + duration);
 
-        // 15秒後循環
         musicLoopId = setTimeout(playTechLoop, duration * 1000);
     }
 
     function toggleMusic() {
         const btn = document.getElementById('musicBtn');
         if (!musicPlaying) {
-            // 啟動音樂
             if (!musicCtx) musicCtx = new (window.AudioContext || window.webkitAudioContext)();
             if (musicCtx.state === 'suspended') musicCtx.resume();
             musicPlaying = true;
@@ -502,7 +623,6 @@
             btn.classList.add('playing');
             playTechLoop();
         } else {
-            // 暫停音樂
             musicPlaying = false;
             if (musicCtx) musicCtx.suspend();
             clearTimeout(musicLoopId);
@@ -511,26 +631,21 @@
         }
     }
 
-    // 初始化音樂按鈕狀態
-    document.getElementById('musicBtn').classList.add('paused');
-
-    // 首次點擊頁面啟動音樂
     document.addEventListener('click', function initMusic() {
         if (!musicPlaying) {
             toggleMusic();
-            // 顯示提示
             const hint = document.createElement('div');
             hint.className = 'music-hint';
             hint.textContent = '🎵 音樂播放中 · 右上角按鈕可控制';
             document.body.appendChild(hint);
-            setTimeout(() => hint.remove(), 3000);
+            setTimeout(() => hint.remove(), 2800);
         }
         document.removeEventListener('click', initMusic);
     });
 
-    // ===== 粒子背景 =====
+    // ====== 粒子背景 ======
     const canvas = document.getElementById('particles');
-    const ctx = canvas.getContext('2d');
+    const pCtx = canvas.getContext('2d');
     let particles = [];
     let mouse = { x: null, y: null };
 
@@ -572,12 +687,12 @@
             }
         }
         draw() {
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-            ctx.fillStyle = this.color;
-            ctx.globalAlpha = this.opacity;
-            ctx.fill();
-            ctx.globalAlpha = 1;
+            pCtx.beginPath();
+            pCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            pCtx.fillStyle = this.color;
+            pCtx.globalAlpha = this.opacity;
+            pCtx.fill();
+            pCtx.globalAlpha = 1;
         }
     }
 
@@ -592,24 +707,32 @@
                 const dy = particles[i].y - particles[j].y;
                 const dist = Math.sqrt(dx * dx + dy * dy);
                 if (dist < 100) {
-                    ctx.beginPath();
-                    ctx.strokeStyle = `rgba(255,255,255,${0.08 * (1 - dist / 100)})`;
-                    ctx.lineWidth = 0.5;
-                    ctx.moveTo(particles[i].x, particles[i].y);
-                    ctx.lineTo(particles[j].x, particles[j].y);
-                    ctx.stroke();
+                    pCtx.beginPath();
+                    pCtx.strokeStyle = `rgba(255,255,255,${0.08 * (1 - dist / 100)})`;
+                    pCtx.lineWidth = 0.5;
+                    pCtx.moveTo(particles[i].x, particles[i].y);
+                    pCtx.lineTo(particles[j].x, particles[j].y);
+                    pCtx.stroke();
                 }
             }
         }
     }
 
     function animate() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        pCtx.clearRect(0, 0, canvas.width, canvas.height);
         particles.forEach(p => { p.update(); p.draw(); });
         connectParticles();
         requestAnimationFrame(animate);
     }
     animate();
+
+    // ====== Stagger card entrance ======
+    const cards = document.querySelectorAll('.nav-card');
+    cards.forEach((card, i) => {
+        setTimeout(() => {
+            card.classList.add('visible');
+        }, 100 + i * 80);
+    });
     </script>
 </body>
 </html>
