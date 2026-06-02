@@ -278,6 +278,7 @@
     <div class="overlay" id="gameOver">
         <div class="overlay-content">
             <div class="trophy" id="trophyEmoji">🎉</div>
+            <div style="font-size:13px;color:#b2bec3;margin:4px 0;">最高分: <span id="highScore" style="color:#feca57;">0</span></div>
             <h2 id="endTitle">攤位打烊啦！</h2>
             <div class="final-score" id="finalScore">0</div>
             <div class="label">完美章魚燒</div>
@@ -303,6 +304,24 @@
     let comboCount = 0, comboTimer = null;
     let lastSpawnTime = 0;
 
+    // ===== 音效系統 =====
+    let takoAudioCtx;
+    function initTakoAudio(){if(!takoAudioCtx)takoAudioCtx=new(window.AudioContext||window.webkitAudioContext)();}
+    function playTakoSfx(freq,dur,type='sine',vol=0.1){
+        if(!takoAudioCtx)return;try{
+            const o=takoAudioCtx.createOscillator(),g=takoAudioCtx.createGain();
+            o.type=type;o.frequency.setValueAtTime(freq,takoAudioCtx.currentTime);
+            g.gain.setValueAtTime(vol,takoAudioCtx.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.001,takoAudioCtx.currentTime+dur);
+            o.connect(g);g.connect(takoAudioCtx.destination);o.start();o.stop(takoAudioCtx.currentTime+dur);
+        }catch(e){}
+    }
+    function playComboSound(combo){
+        const freqs={3:523,4:659,5:784,6:880,7:988,8:1175,10:1319};
+        if(freqs[combo]){playTakoSfx(freqs[combo],0.2,'triangle',0.12);}
+        if(combo%5===0)playTakoSfx(1568,0.3,'square',0.08);
+    }
+    
     const takoTypes = [
         { icon: '🟡', cls: 'normal', score: 1, weight: 50 },
         { icon: '🟠', cls: 'golden', score: 2, weight: 25 },
@@ -359,6 +378,7 @@
     }
 
     function startGame() {
+        initTakoAudio();
         score = 0; timeLeft = 30; totalTime = 30;
         comboCount = 0;
         scoreEl.textContent = score;
@@ -412,6 +432,7 @@
             clearTimeout(comboTimer);
             comboTimer = setTimeout(() => { comboCount = 0; }, 1500);
             if (comboCount >= 3) showCombo(comboCount);
+            if(comboCount>=3) playComboSound(comboCount);
 
             let pts = tipo.score;
             if (comboCount >= 5) pts = Math.floor(pts * 1.5);
@@ -446,10 +467,18 @@
         clearInterval(spawnInterval);
         finalScoreEl.textContent = score;
 
+        // 儲存最高分
+        const hs = parseInt(localStorage.getItem('takoyaki_highscore')||'0');
+        if(score > hs){localStorage.setItem('takoyaki_highscore',score);}
+
         if (score >= 80) { endTitle.textContent = '章魚燒之神！'; trophyEmoji.textContent = '🏆'; }
         else if (score >= 50) { endTitle.textContent = '攤位大王！'; trophyEmoji.textContent = '🥇'; }
         else if (score >= 30) { endTitle.textContent = '不錯嘛！'; trophyEmoji.textContent = '👍'; }
         else { endTitle.textContent = '攤位打烊啦！'; trophyEmoji.textContent = '😅'; }
+
+        // 顯示最高分
+        const hs = parseInt(localStorage.getItem('takoyaki_highscore')||'0');
+        document.getElementById('highScore').textContent = hs;
 
         gameOverEl.style.display = 'flex';
     }

@@ -584,7 +584,7 @@
         if(!text){showToast('回覆內容不能空白','error');return;}
         const msg=allMessages.find(m=>m.id===msgId);
         const oldReplies=msg?msg.replies:[];
-        const newReply={author:'訪客',text,text:()=>text,created_at:new Date().toISOString()};
+        const newReply={author:'訪客',text:text,created_at:new Date().toISOString()};
         if(supabaseOnline){
             try{
                 const res=await fetch(SUPABASE_URL+'/rest/v1/guestbook?id=eq.'+msgId,{
