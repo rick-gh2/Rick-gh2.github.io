@@ -615,29 +615,42 @@
 
         if(supabaseOnline){
             try{
-                const res=await fetch(SUPABASE_URL+'/rest/v1/guestbook',{
-                    method:'POST',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=representation'},
-                    body:JSON.stringify(msgData)
+                const res=await fetch(SUPABASE_URL+'/rest/v1/guestbook?select=id&limit=1',{
+                    method:'GET',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}
                 });
                 if(res.ok){
-                    document.getElementById('name').value='';document.getElementById('message').value='';updateCharCount();
-                    showToast('🎉 留言成功！','success');loadMessages();
+                    setStatus(true);
                 } else {
-                    throw new Error('HTTP '+res.status);
+                    throw new Error('Supabase 連線失敗');
                 }
             }catch(err){
-                console.log('Supabase 失敗，使用本地儲存:',err.message);
-                // 自動備份到本地
-                addLocalMessage(msgData);
-                document.getElementById('name').value='';document.getElementById('message').value='';updateCharCount();
-                showToast('🎉 留言已儲存！（離線模式）','success');
-                setStatus(false);loadMessages();
+                console.log('Supabase 連線檢查失敗:',err.message);
+                setStatus(false);
             }
-        } else {
-            // 完全離線模式
+        }
+        
+        // 總是使用 Supabase 嘗試寫入
+        try {
+            setStatus(true);
+            const res=await fetch(SUPABASE_URL+'/rest/v1/guestbook',{
+                method:'POST',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=representation'},
+                body:JSON.stringify(msgData)
+            });
+            if(res.ok){
+                document.getElementById('name').value='';document.getElementById('message').value='';updateCharCount();
+                showToast('🎉 留言成功！','success');loadMessages();
+                return;
+            } else {
+                throw new Error('HTTP '+res.status);
+            }
+        }catch(err){
+            console.log('Supabase 寫入失敗，使用本地儲存:',err.message);
+            setStatus(false);
+            // 自動備份到本地
             addLocalMessage(msgData);
             document.getElementById('name').value='';document.getElementById('message').value='';updateCharCount();
-            showToast('🎉 留言已儲存！（離線模式）','success');loadMessages();
+            showToast('⚠️ 留言已儲存！（本地備份）','warning');
+            loadMessages();
         }
         btn.disabled=false;btn.innerHTML='🐾 送出留言';
     }
