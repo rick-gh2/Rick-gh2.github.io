@@ -14,7 +14,7 @@
             overflow:hidden;
         }
         #game-container {
-            position:relative;width:800px;max-width:96vw;
+            position:relative;width:min(800px,96vw);
         }
         canvas {
             display:block;width:100%;border-radius:14px;
@@ -117,50 +117,37 @@
         }catch(e){}
     }
 
-    // ===== 高品質像素恐龍 (16x16 像素風格) =====
+    // ===== 恐龍物件 =====
     const dino={x:55,y:GROUND_Y,w:44,h:48,vy:0,grav:0.65,jumpF:-12.5,jumping:false,ducking:false,legFrame:0,legTimer:0};
 
-    // 恐龍像素資料 (16x16 网格，每格 3px)
-    const DINO_PNG=''; // 使用 canvas 繪製像素圖
+    function fillRect(x,y,w,h,color){ctx.fillStyle=color;ctx.fillRect(x,y,w,h);}
 
+    // 恐龍繪製
     function drawPixelDino(x,y,ducking,night){
         const s=3,c=night?'#e0e0e0':'#535353';
         ctx.fillStyle=c;
         if(ducking){
-            // 蹲下姿勢 - 更寬更扁
             const px=x,py=y-24;
-            // 身體
             fillRect(px,py+4,16*s,6*s,c);
-            // 頭
             fillRect(px+12*s,py,8*s,5*s,c);
-            // 眼睛
             ctx.fillStyle=night?'#1a1a2e':'#f7f7f7';
-            fillRect(px+18*s,py+s,s,s,c.replace('#','rgba(').replace('535353','255,255,255').replace('e0e0e0','0,0,0'));
-            // 腿
+            fillRect(px+18*s,py+s,s,s,c);
             dino.legTimer++;if(dino.legTimer>8){dino.legTimer=0;dino.legFrame=1-dino.legFrame;}
             fillRect(px+4*s,py+10*s,3*s,14*s,c);
             fillRect(px+10*s,py+10*s,3*s,14*s,c);
             if(dino.legFrame)fillRect(px+4*s,py+10*s,3*s,8*s,c);
         } else {
-            // 站立姿勢
             const px=x,py=y-dino.h;
-            // 頭部
             fillRect(px+20,py,24,20,c);
-            // 眼睛（白底黑瞳孔）
             ctx.fillStyle=night?'#1a1a2e':'#f7f7f7';
             fillRect(px+34,py+4,6,6,c);
             ctx.fillStyle=c;
             fillRect(px+36,py+6,3,3,'#000');
-            // 嘴巴
             fillRect(px+44,py+14,10,4,c);
-            // 身體
             fillRect(px+12,py+20,24,dino.h-28,c);
-            // 小手臂
             fillRect(px+10,py+28,6,10,c);
-            // 尾巴
             fillRect(px-2,py+24,14,8,c);
             fillRect(px-8,py+20,8,8,c);
-            // 腿
             if(dino.jumping||!gameRunning){
                 fillRect(px+16,py+dino.h-8,8,8,c);
                 fillRect(px+28,py+dino.h-8,8,8,c);
@@ -177,9 +164,7 @@
         }
     }
 
-    function fillRect(x,y,w,h,color){ctx.fillStyle=color;ctx.fillRect(x,y,w,h);}
-
-    // 仙人掌像素繪製
+    // 仙人掌繪製
     function drawPixelCactus(o){
         const c=night?'#8a8a8a':'#535353';
         ctx.fillStyle=c;
@@ -187,17 +172,12 @@
             fillRect(o.x+4,GROUND_Y-30,8,30,c);
             fillRect(o.x,GROUND_Y-22,4,12,c);
             fillRect(o.x+12,GROUND_Y-18,4,10,c);
-            // 頂部圓潤
             fillRect(o.x+4,GROUND_Y-32,8,3,c);
         } else if(o.type==='large'){
             fillRect(o.x+6,GROUND_Y-45,14,45,c);
             fillRect(o.x,GROUND_Y-34,6,16,c);
             fillRect(o.x+20,GROUND_Y-30,6,12,c);
             fillRect(o.x+6,GROUND_Y-47,14,3,c);
-            // 紋理
-            ctx.fillStyle=night?'#777':'#666';
-            fillRect(o.x+10,GROUND_Y-40,2,2,c.replace('#','rgba(').replace('8a8a8a','138,138,138').replace('666','102,102,102'));
-            fillRect(o.x+12,GROUND_Y-25,2,2,c.replace('#','rgba(').replace('8a8a8a','138,138,138').replace('666','102,102,102'));
         } else {
             for(let i=0;i<3;i++){
                 fillRect(o.x+i*14+2,GROUND_Y-30-i*5,8,30+i*5,c);
@@ -210,18 +190,13 @@
         const c=night?'#8a8a8a':'#535353';
         ctx.fillStyle=c;
         let pf=pterodactylFrame||0;pf++;if(pf>15)pf=0;pterodactylFrame=pf;
-        // 身體
         fillRect(o.x+8,o.y+8,30,10,c);
-        // 頭部
         fillRect(o.x+34,o.y+6,16,8,c);
-        // 嘴巴
         fillRect(o.x+46,o.y+10,10,4,c);
-        // 翅膀
         if(pf<8)fillRect(o.x+10,o.y-6,20,8,c);
         else fillRect(o.x+10,o.y+18,20,8,c);
-        // 眼睛
         ctx.fillStyle=night?'#ff6b6b':'#e74c3c';
-        fillRect(o.x+44,o.y+8,3,3,c.replace('#','rgba(').replace('ff6b6b','231,76,60').replace('e74c3c','231,76,60'));
+        fillRect(o.x+44,o.y+8,3,3,c);
     }
 
     // 地面
@@ -269,12 +244,10 @@
     function spawnObs(){
         const types=['small','large','group'];
         const type=types[Math.floor(Math.random()*types.length)];
-        let o={x:W,type:speed};
+        let o={x:W,type:type};
         if(Math.random()<0.2&&score>200){
             o.type='pterodactyl';o.y=GROUND_Y-20-Math.random()*50;o.w=50;o.h=20;
-        } else if(type==='small'){o.y=GROUND_Y;o.w=16;o.h=30;}
-        else if(type==='large'){o.y=GROUND_Y;o.w=26;o.h=45;}
-        else{o.y=GROUND_Y;o.w=40;o.h=35;}
+        } else if(type==='small'){o.y=GROUND_Y;o.w=16;o.h=30;} else if(type==='large'){o.y=GROUND_Y;o.w=26;o.h=45;} else{o.y=GROUND_Y;o.w=40;o.h=35;}
         obstacles.push(o);
     }
 
@@ -294,18 +267,23 @@
         }
         obsTimer++;
         if(obsTimer>50+Math.random()*40){spawnObs();obsTimer=0;}
-        obstacles.forEach(o=>{o.x-=o.speed;if(o.type==='pterodactyl')o.x-=1;});
+        obstacles.forEach(o=>{o.x-=speed;if(o.type==='pterodactyl')o.x-=1;});
         obstacles=obstacles.filter(o=>o.x>-60);
         clouds.forEach(c=>{c.x-=c.s;if(c.x<-60){c.x=W+20;c.y=30+Math.random()*80;}});
 
-        // 碰撞
-        const dx=dino.x+14,dw=dino.ducking?58:24;
-        const dy=dino.y-(dino.ducking?24:dino.h),dh=dino.ducking?24:dino.h;
+        // 碰撞檢測 - 使用固定解析度座標
+        const dinoLeft=dino.x+8,dinoRight=dino.x+(dino.ducking?52:36);
+        const dinoTop=dino.y-(dino.ducking?24:dino.h),dinoBottom=dino.y-4;
         for(const o of obstacles){
-            const ox=o.x+4,ow=(o.w||30)-8;
-            const oy=(o.type==='pterodactyl'?o.y:GROUND_Y)-(o.h||30);
-            const oh=o.h||30;
-            if(dx<ox+ow&&dx+dw>ox&&dy<oy+oh&&dy+dh>oy){endGame();return;}
+            if(o.type==='pterodactyl'){
+                const ox=o.x+4,ow=(o.w||30)-8;
+                const oy=o.y+4,oh=(o.h||20)-6;
+                if(dinoLeft<ox+ow&&dinoRight>ox&&dinoTop<oy+oh&&dinoBottom>oy){endGame();return;}
+            } else {
+                const obsTop=GROUND_Y-(o.h||30);
+                const ox=o.x+4,ow=(o.w||30)-8;
+                if(dinoLeft<ox+ow&&dinoRight>ox&&dinoBottom>obsTop){endGame();return;}
+            }
         }
     }
 
@@ -335,7 +313,8 @@
         sfx(200,0.5,'sawtooth',0.15);sfx(100,0.6,'square',0.1);
     }
     function jump(){
-        if(!gameRunning&&!gameOverState||gameOverState){startGame();return;}
+        if(gameOverState){startGame();return;}
+        if(!gameRunning){startGame();return;}
         if(!dino.jumping){dino.jumping=true;dino.vy=dino.jumpF;sfx(500,0.1,'square',0.08);}
     }
     function duck(a){if(gameRunning&&!gameOverState)dino.ducking=a;}
