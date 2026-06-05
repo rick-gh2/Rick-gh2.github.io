@@ -14,6 +14,8 @@
             touch-action:none;
         }
         canvas { display:block; }
+
+        /* ===== UI 層 ===== */
         #ui {
             position:absolute; top:12px; left:14px;
             color:#fff; font-size:1rem; z-index:10;
@@ -24,6 +26,8 @@
         .score { font-size:1.6rem; font-weight:900; color:#feca57; }
         .lives { font-size:1.4rem; }
         .combo-text { font-size:0.9rem; color:#48dbfb; font-weight:700; }
+
+        /* 能量條 */
         .energy-bar-wrap {
             position:absolute; top:12px; right:14px; z-index:10;
             width:120px; pointer-events:none;
@@ -38,6 +42,8 @@
             background:linear-gradient(90deg,#6c5ce7,#a29bfe);
             transition:width 0.2s;
         }
+
+        /* ===== 按鈕 ===== */
         #startBtn, #restartBtn {
             position:absolute; top:50%; left:50%;
             transform:translate(-50%,-50%);
@@ -55,6 +61,8 @@
             0%,100%{box-shadow:0 8px 30px rgba(72,219,251,0.4)}
             50%{box-shadow:0 8px 40px rgba(72,219,251,0.7)}
         }
+
+        /* ===== Game Over ===== */
         #gameOver {
             display:none; position:absolute; top:50%; left:50%;
             transform:translate(-50%,-50%);
@@ -82,6 +90,8 @@
             font-size:0.9rem;
         }
         .back-link:hover { color:rgba(255,255,255,0.8); }
+
+        /* ===== 手機控制 ===== */
         #controls {
             position:absolute; bottom:20px; left:0; width:100%;
             display:flex; justify-content:space-between; padding:0 20px;
@@ -101,6 +111,7 @@
             background:rgba(255,71,87,0.25); border-color:rgba(255,71,87,0.5);
         }
         .fire-btn:active { background:rgba(255,71,87,0.5); }
+
         @media(max-width:600px){
             .score { font-size:1.3rem; }
             .energy-bar-wrap { width:90px; }
@@ -112,6 +123,7 @@
 </head>
 <body>
     <canvas id="game"></canvas>
+
     <div id="ui">
         <div class="ui-row"><span class="score">分數：<span id="score">0</span></span></div>
         <div class="ui-row"><span class="lives" id="lives">❤️❤️❤️</span></div>
@@ -121,7 +133,9 @@
         <div class="energy-label">⚡ 特殊武器</div>
         <div class="energy-bar-bg"><div class="energy-bar" id="energyBar"></div></div>
     </div>
+
     <button id="startBtn">🛩️ 開始空戰</button>
+
     <div id="gameOver">
         <h2>💥 飛機墜毀！</h2>
         <div class="final-score" id="finalScore">0</div>
@@ -129,18 +143,18 @@
         <br>
         <a href="index.html" class="back-link">← 回首頁</a>
     </div>
+
     <div id="controls" style="display:none;">
         <div style="display:flex;gap:10px;">
             <button class="ctrl-btn" id="leftBtn">◀</button>
             <button class="ctrl-btn" id="rightBtn">▶</button>
-            <button class="ctrl-btn" id="upBtn">▲</button>
-            <button class="ctrl-btn" id="downBtn">▼</button>
         </div>
         <div style="display:flex;gap:10px;">
             <button class="ctrl-btn fire-btn" id="fireBtn">🔥</button>
             <button class="ctrl-btn" id="bombBtn" style="font-size:1.4rem;background:rgba(108,92,231,0.25);border-color:rgba(108,92,231,0.5);">💣</button>
         </div>
     </div>
+
     <script>
     const canvas=document.getElementById('game');
     const ctx=canvas.getContext('2d');
@@ -153,7 +167,6 @@
     let audioCtx;
     function initAudio(){
         if(!audioCtx) audioCtx=new(window.AudioContext||window.webkitAudioContext)();
-        if(audioCtx.state==='suspended') audioCtx.resume();
     }
     function playSound(freq,dur,type='square',vol=0.12){
         if(!audioCtx)return;
@@ -168,33 +181,27 @@
     }
 
     // ===== 遊戲狀態 =====
-    let gameRunning=false, kills=0, scrollSpeed=2;
+    let gameRunning=false, score=0, lives=3, scrollSpeed=2;
     let lastEnemyTime=0, energy=0, energyMax=100;
     let stars=[], clouds=[], mountains=[];
     let powerups=[], explosions=[], screenShake=0;
-    let playerCombo=0, comboTimer=null, comboDisplayTimer=null;
+    let playerCombo=0, comboTimer=null;
 
-    // 玩家（BUG FIX #1: 初始化 player.dy）
-    const player={x:80,y:0,w:50,h:50,speed:5, dx:0, dy:0,fireRate:180,lastFire:0,trail:[]};
+    // 玩家
+    const player={x:80,y:0,w:50,h:50,speed:5, dx:0,fireRate:180,lastFire:0,trail:[]};
 
     let bullets=[], enemies=[], enemyBullets=[], powerupBullets=[];
 
-    // ===== 初始化背景 =====
-    function initStars(){
-        stars=[];
-        for(let i=0;i<200;i++){
-            stars.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,s:Math.random()*2.5+0.5,speed:Math.random()*2.5+0.5,brightness:Math.random()});
-        }
-        clouds=[];
-        for(let i=0;i<10;i++){
-            clouds.push({x:Math.random()*canvas.width*2,y:Math.random()*canvas.height*0.55,w:Math.random()*120+60,h:Math.random()*35+20});
-        }
-        mountains=[];
-        for(let i=0;i<25;i++){
-            mountains.push({x:i*130,y:canvas.height-Math.random()*180-40,w:Math.random()*90+60,h:Math.random()*120+60});
-        }
+    // 星空背景
+    for(let i=0;i<200;i++){
+        stars.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,s:Math.random()*2.5+0.5,speed:Math.random()*2.5+0.5,brightness:Math.random()});
     }
-    initStars();
+    for(let i=0;i<10;i++){
+        clouds.push({x:Math.random()*canvas.width*2,y:Math.random()*canvas.height*0.55,w:Math.random()*120+60,h:Math.random()*35+20});
+    }
+    for(let i=0;i<25;i++){
+        mountains.push({x:i*130,y:canvas.height-Math.random()*180-40,w:Math.random()*90+60,h:Math.random()*120+60});
+    }
 
     // ===== 繪製飛機 =====
     function drawPlane(x,y,scale=1,color='#48dbfb',tilt=0){
@@ -202,6 +209,8 @@
         ctx.translate(x,y);
         ctx.scale(scale,scale);
         ctx.rotate(tilt*0.08);
+
+        // 引擎尾焰
         const flameLen=12+Math.random()*10;
         const flameGrad=ctx.createLinearGradient(-22,0,-22-flameLen,0);
         flameGrad.addColorStop(0,'#feca57');
@@ -209,11 +218,13 @@
         flameGrad.addColorStop(1,'rgba(255,159,67,0)');
         ctx.fillStyle=flameGrad;
         ctx.beginPath();
-        ctx.moveTo(-22,4);
-        ctx.lineTo(-22-flameLen,0);
-        ctx.lineTo(-22,-4);
+        ctx.moveTo(-20,0);
+        ctx.lineTo(-22-flameLen,-5);
+        ctx.lineTo(-22-flameLen,5);
         ctx.closePath();
         ctx.fill();
+
+        // 機身
         ctx.fillStyle=color;
         ctx.beginPath();
         ctx.moveTo(28,0);
@@ -222,6 +233,8 @@
         ctx.lineTo(-18,14);
         ctx.closePath();
         ctx.fill();
+
+        // 機翼
         ctx.fillStyle='#0abde3';
         ctx.beginPath();
         ctx.moveTo(8,0);
@@ -237,6 +250,8 @@
         ctx.lineTo(-8,0);
         ctx.closePath();
         ctx.fill();
+
+        // 尾翼
         ctx.fillStyle='#2e86de';
         ctx.beginPath();
         ctx.moveTo(-18,0);
@@ -250,18 +265,25 @@
         ctx.lineTo(-25,0);
         ctx.closePath();
         ctx.fill();
+
+        // 駕駛艙
         ctx.fillStyle='rgba(162,155,254,0.7)';
         ctx.beginPath();
         ctx.ellipse(5,-2,6,4,0,0,Math.PI*2);
         ctx.fill();
+
         ctx.restore();
     }
 
+    // 敵人
     function drawEnemy(e){
         ctx.save();
         ctx.translate(e.x,e.y);
         ctx.scale(-1,1);
-        if(e.type==='boss') ctx.scale(1.4,1.4);
+        if(e.type==='boss'){
+            ctx.scale(1.4,1.4);
+        }
+        // 敵機主體
         ctx.fillStyle=e.hp>2?'#e74c3c':'#c0392b';
         ctx.beginPath();
         ctx.moveTo(22,0);
@@ -285,6 +307,7 @@
         ctx.lineTo(-6,0);
         ctx.closePath();
         ctx.fill();
+        // 紅眼
         ctx.fillStyle='#ff6b6b';
         ctx.shadowColor='#ff0000';
         ctx.shadowBlur=8;
@@ -295,6 +318,7 @@
         ctx.restore();
     }
 
+    // 爆炸
     function createExplosion(x,y,size=1){
         playSound(150+Math.random()*100,0.3,'sawtooth',0.08);
         for(let i=0;i<Math.floor(18*size);i++){
@@ -313,97 +337,104 @@
         screenShake=6*size;
     }
 
-    // ===== BUG FIX #2: 修正玩家 Y 座標控制 =====
+    // 更新玩家
     function updatePlayer(){
-        // 使用 player.dx 和 player.dy 控制方向
+        const targetY=canvas.height/2;
+        // 平滑移動
+        player.y+=(targetY-player.y)*0.15;
         player.x+=player.dx*player.speed;
-        player.y+=player.dy*player.speed;
-
-        // 邊界限制
         player.x=Math.max(player.w/2,Math.min(canvas.width-player.w/2,player.x));
-        player.y=Math.max(player.h/2,Math.min(canvas.height-player.h/2,player.y));
-
-        // 傾斜效果（只有 X 方向移動時）
-        const tilt=player.dx;
 
         // 尾焰粒子
         player.trail.push({x:player.x-28,y:player.y+Math.random()*6-3,life:15});
-        if(player.trail.length>20) player.trail.shift();
+        if(player.trail.length>20)player.trail.shift();
+
+        // 手機方向
+        player.y+=touchDir.y*player.speed;
+        player.y=Math.max(player.h/2,Math.min(canvas.height-player.h/2,player.y));
+
+        // 飛機傾斜
+        const tilt=player.dx;
     }
 
+    // 射擊
     function shoot(){
         const now=Date.now();
-        if(now-player.lastFire<player.fireRate) return;
+        if(now-player.lastFire<player.fireRate)return;
         player.lastFire=now;
         playSound(800,0.08,'square',0.06);
-        // 三向子彈（更豪華）
-        bullets.push({x:player.x+28,y:player.y-10,w:6,h:14,speed:10,dmg:1,angle:0});
-        bullets.push({x:player.x+28,y:player.y+10,w:6,h:14,speed:10,dmg:1,angle:0});
-        // 中間子彈
-        bullets.push({x:player.x+28,y:player.y,w:8,h:16,speed:10,dmg:1,angle:0});
+        // 雙向子彈
+        bullets.push({x:player.x+28,y:player.y-10,w:6,h:14,speed:10,dmg:1});
+        bullets.push({x:player.x+28,y:player.y+10,w:6,h:14,speed:10,dmg:1});
     }
 
+    // 特殊武器
     function useBomb(){
-        if(energy<energyMax) return;
+        if(energy<energyMax)return;
         energy=0;
         updateEnergyBar();
         playSound(200,0.5,'sine',0.15);
+        // 全屏爆炸
         enemies.forEach(e=>{
             createExplosion(e.x,e.y,1.5);
+            score+=20;
         });
         enemies=[];
         enemyBullets=[];
         screenShake=15;
+        document.getElementById('score').textContent=score;
     }
 
+    // 生成敵人
     function spawnEnemy(now){
-        const interval=Math.max(500,1200-kills*2);
-        if(now-lastEnemyTime<interval) return;
+        const interval=Math.max(500,1200-score/5);
+        if(now-lastEnemyTime<interval)return;
         lastEnemyTime=now;
+
         const roll=Math.random();
         let e;
-        if(kills>20&&roll<0.05){
+        if(score>500&&roll<0.05){
+            // Boss
             e={x:canvas.width+50,y:canvas.height/2,w:60,h:60,speed:1.2,hp:8,maxHp:8,type:'boss'};
         }else if(roll<0.4){
             e={x:canvas.width+30,y:Math.random()*(canvas.height-120)+60,w:30,h:30,speed:2.5+Math.random()*2,hp:1,type:'normal'};
         }else if(roll<0.7){
             e={x:canvas.width+45,y:Math.random()*(canvas.height-160)+80,w:45,h:45,speed:1.8+Math.random()*1.2,hp:3,type:'heavy'};
         }else{
-            // 快速型（閃電藍色）
+            // 快速型
             e={x:canvas.width+25,y:Math.random()*(canvas.height-100)+50,w:25,h:25,speed:4+Math.random()*2,hp:1,type:'fast'};
         }
         enemies.push(e);
     }
 
+    // 碰撞
     function checkCollisions(){
+        // 子彈打敵人
         for(let bi=bullets.length-1;bi>=0;bi--){
             const b=bullets[bi];
-            if(!b) continue;
+            if(!b)continue;
             for(let ei=enemies.length-1;ei>=0;ei--){
                 const e=enemies[ei];
-                if(!e) continue;
                 if(Math.abs(b.x-e.x)<(e.w/2+b.w/2)&&Math.abs(b.y-e.y)<(e.h/2+b.h/2)){
                     e.hp-=b.dmg||1;
                     bullets.splice(bi,1);
+                    // 命中火花
                     for(let i=0;i<4;i++){
                         explosions.push({x:b.x,y:b.y,vx:(Math.random()-0.5)*4,vy:(Math.random()-0.5)*4,life:8,maxLife:8,size:3,color:'#48dbfb'});
                     }
                     if(e.hp<=0){
                         createExplosion(e.x,e.y,e.type==='boss'?2:1);
                         enemies.splice(ei,1);
-                        // BUG FIX #4: 用 kills 計數而非 score
-                        kills++;
-                        score=kills*10+playerCombo*5;
+                        score+=e.type==='boss'?200:e.type==='heavy'?50:e.type==='fast'?15:10;
                         energy=Math.min(energyMax,energy+e.type==='boss'?50:e.type==='heavy'?15:5);
                         updateEnergyBar();
-                        showCombo(kills);
-                        document.getElementById('score').textContent=score;
                     }
                     break;
                 }
             }
         }
 
+        // 敵人撞玩家
         for(let ei=enemies.length-1;ei>=0;ei--){
             const e=enemies[ei];
             if(Math.abs(player.x-e.x)<(e.w/2+15)&&Math.abs(player.y-e.y)<(e.h/2+12)){
@@ -413,6 +444,7 @@
             }
         }
 
+        // 子彈撞玩家
         for(let bi=enemyBullets.length-1;bi>=0;bi--){
             const b=enemyBullets[bi];
             if(Math.abs(player.x-b.x)<18&&Math.abs(player.y-b.y)<18){
@@ -427,24 +459,10 @@
         lives--;
         playerCombo=0;
         clearTimeout(comboTimer);
-        clearTimeout(comboDisplayTimer);
-        document.getElementById('comboDisplay').textContent='';
         updateLives();
         playSound(100,0.4,'sawtooth',0.1);
         screenShake=10;
-        if(lives<=0) endGame();
-    }
-
-    function showCombo(count){
-        if(count>=3){
-            playerCombo=count;
-            clearTimeout(comboTimer);
-            comboTimer=setTimeout(()=>{
-                playerCombo=0;
-                document.getElementById('comboDisplay').textContent='';
-            },3000);
-            document.getElementById('comboDisplay').textContent='🔥 '+count+'x KILL COMBO!';
-        }
+        if(lives<=0)endGame();
     }
 
     function updateLives(){
@@ -454,53 +472,97 @@
         document.getElementById('energyBar').style.width=(energy/energyMax*100)+'%';
     }
 
-    let lives=3;
-    let score=0;
-
+    // ===== 更新 =====
     function update(){
-        if(!gameRunning) return;
+        if(!gameRunning)return;
+
         updatePlayer();
+
+        // 子彈
         bullets=bullets.filter(b=>{b.x+=b.speed;return b.x<canvas.width+20;});
+
+        // 敵人
         enemies=enemies.filter(e=>{
             e.x-=e.speed;
+            // Boss 會射擊
             if(e.type==='boss'&&Math.random()<0.015){
                 enemyBullets.push({x:e.x-30,y:e.y,speed:4});
             }
             return e.x>-80;
         });
+
+        // 敵人子彈
         enemyBullets=enemyBullets.filter(b=>{b.x-=b.speed;return b.x>-10;});
+
+        // 碰撞
         checkCollisions();
-        explosions=explosions.filter(p=>{p.x+=p.vx;p.y+=p.vy;p.vx*=0.95;p.vy*=0.95;p.life--;return p.life>0;});
+
+        // 爆炸
+        explosions=explosions.filter(p=>{
+            p.x+=p.vx;p.y+=p.vy;p.vx*=0.95;p.vy*=0.95;p.life--;
+            return p.life>0;
+        });
+
+        // 玩家尾焰
         player.trail=player.trail.filter(t=>{t.life--;return t.life>0;});
+
+        // 星空
         stars.forEach(s=>{s.x-=s.speed;if(s.x<0){s.x=canvas.width;s.y=Math.random()*canvas.height;}});
+
+        // 雲
         clouds.forEach(c=>{c.x-=scrollSpeed*0.4;if(c.x<-c.w){c.x=canvas.width+50;}});
+
+        // 山
         mountains.forEach(m=>{m.x-=scrollSpeed*0.7;if(m.x<-m.w){m.x=canvas.width+m.w+Math.random()*200;}});
-        if(kills>10) scrollSpeed=2+kills/200;
+
+        // Combo 系統（每 10 秒重置）
+        if(gameRunning){
+            playerCombo++;
+            if(playerCombo>=30){
+                comboTimer=setTimeout(()=>{playerCombo=0;document.getElementById('comboDisplay').textContent='';},1500);
+                if(playerCombo>=30) document.getElementById('comboDisplay').textContent='🔥 '+Math.floor(playerCombo/10)+'x COMBO!';
+            }
+        }
+
+        // 分數&速度
+        score++;
+        if(score%100===0)scrollSpeed+=0.15;
+        document.getElementById('score').textContent=score;
     }
 
+    // ===== 繪製 =====
     function draw(){
+        // 屏幕震動
         if(screenShake>0){
             ctx.save();
             ctx.translate((Math.random()-0.5)*screenShake,(Math.random()-0.5)*screenShake);
             screenShake*=0.85;if(screenShake<0.5)screenShake=0;
         }
+
+        // 天空
         const grad=ctx.createLinearGradient(0,0,0,canvas.height);
         grad.addColorStop(0,'#0a0a2e');
         grad.addColorStop(0.5,'#1a1a4e');
         grad.addColorStop(1,'#2d3436');
         ctx.fillStyle=grad;
         ctx.fillRect(0,0,canvas.width,canvas.height);
+
+        // 星星
         stars.forEach(s=>{
             const b=s.brightness*(0.7+Math.sin(Date.now()*0.003+s.x)*0.3);
             ctx.fillStyle=`rgba(255,255,255,${b})`;
             ctx.fillRect(s.x,s.y,s.s,s.s);
         });
+
+        // 雲
         clouds.forEach(c=>{
             ctx.fillStyle='rgba(255,255,255,0.04)';
             ctx.beginPath();
             ctx.ellipse(c.x,c.y,c.w,c.h,0,0,Math.PI*2);
             ctx.fill();
         });
+
+        // 山
         mountains.forEach(m=>{
             ctx.fillStyle='rgba(0,0,0,0.15)';
             ctx.beginPath();
@@ -510,6 +572,8 @@
             ctx.closePath();
             ctx.fill();
         });
+
+        // 玩家尾焰
         player.trail.forEach(t=>{
             const a=t.life/15;
             ctx.fillStyle=`rgba(254,202,87,${a*0.3})`;
@@ -517,12 +581,18 @@
             ctx.arc(t.x,t.y,4*a,0,Math.PI*2);
             ctx.fill();
         });
+
+        // 敵人
         enemies.forEach(e=>drawEnemy(e));
+
+        // 子彈
         ctx.shadowColor='#feca57';
         ctx.shadowBlur=12;
         ctx.fillStyle='#feca57';
         bullets.forEach(b=>ctx.fillRect(b.x-b.w/2,b.y-b.h/2,b.w,b.h));
         ctx.shadowBlur=0;
+
+        // 敵人子彈
         ctx.shadowColor='#e74c3c';
         ctx.shadowBlur=8;
         ctx.fillStyle='#ff6b6b';
@@ -530,8 +600,12 @@
             ctx.beginPath();ctx.arc(b.x,b.y,5,0,Math.PI*2);ctx.fill();
         });
         ctx.shadowBlur=0;
+
+        // 玩家飛機
         const tilt=player.dx;
         drawPlane(player.x,player.y,1,'#48dbfb',tilt);
+
+        // 爆炸
         explosions.forEach(p=>{
             const a=p.life/p.maxLife;
             ctx.globalAlpha=a;
@@ -541,31 +615,33 @@
             ctx.fill();
         });
         ctx.globalAlpha=1;
-        if(screenShake>0) ctx.restore();
+
+        if(screenShake>0)ctx.restore();
     }
 
+    // ===== Game Over =====
     function endGame(){
         gameRunning=false;
-        document.getElementById('finalScore').textContent=kills+' kills ('+score+' pts)';
+        document.getElementById('finalScore').textContent=score;
         document.getElementById('gameOver').style.display='block';
         document.getElementById('controls').style.display='none';
     }
 
+    // ===== 遊戲循環 =====
     function gameLoop(){
         update();
         draw();
         requestAnimationFrame(gameLoop);
     }
 
+    // ===== 按鈕事件 =====
     function resetGameState(){
-        kills=0;score=0;lives=3;scrollSpeed=2;player.dx=0;player.dy=0;playerCombo=0;energy=0;
+        score=0;lives=3;scrollSpeed=2;player.dx=0;playerCombo=0;energy=0;
         bullets=[];enemies=[];enemyBullets=[];explosions=[];screenShake=0;
         player.x=80;player.y=canvas.height/2;
         document.getElementById('score').textContent='0';
         updateLives();updateEnergyBar();
         document.getElementById('comboDisplay').textContent='';
-        clearTimeout(comboTimer);
-        clearTimeout(comboDisplayTimer);
     }
 
     document.getElementById('startBtn').addEventListener('click',()=>{
@@ -583,85 +659,39 @@
         gameRunning=true;
     });
 
-    // 鍵盤（BUG FIX #1: player.dy 已初始化）
-    const keys={};
+    // 鍵盤
     document.addEventListener('keydown',e=>{
-        keys[e.key]=true;
-        updateKeyDir();
-        if(e.key===' '&&gameRunning){e.preventDefault();shoot();}
-        if(e.key==='b'&&gameRunning) useBomb();
+        if(e.key==='ArrowUp'||e.key==='w')player.dy=-1;
+        if(e.key==='ArrowDown'||e.key==='s')player.dy=1;
+        if(e.key==='ArrowLeft'||e.key==='a')player.dx=-1;
+        if(e.key==='ArrowRight'||e.key==='d')player.dx=1;
+        if(e.key===' ')shoot();
+        if(e.key==='b')useBomb();
     });
     document.addEventListener('keyup',e=>{
-        keys[e.key]=false;
-        updateKeyDir();
+        if(['ArrowUp','ArrowDown','w','s'].includes(e.key))player.dy=0;
+        if(['ArrowLeft','ArrowRight','a','d'].includes(e.key))player.dx=0;
     });
 
-    function updateKeyDir(){
-        player.dx=0;player.dy=0;
-        if(keys['ArrowLeft']||keys['a']||keys['A']) player.dx=-1;
-        if(keys['ArrowRight']||keys['d']||keys['D']) player.dx=1;
-        if(keys['ArrowUp']||keys['w']||keys['W']) player.dy=-1;
-        if(keys['ArrowDown']||keys['s']||keys['S']) player.dy=1;
-    }
-
-    // 手機控制（BUG FIX #3: 加入上/下按鈕 + touchDir.y 支援）
+    // 手機按鈕
     let touchDir={x:0,y:0};
     function setupBtn(id,dir){
         const btn=document.getElementById(id);
-        const onStart=(e)=>{
-            e.preventDefault();
-            initAudio();
-            if(dir==='left') touchDir.x=-1;
-            if(dir==='right') touchDir.x=1;
-            if(dir==='up') touchDir.y=-1;
-            if(dir==='down') touchDir.y=1;
-            if(dir==='fire'&&gameRunning) shoot();
-            if(dir==='bomb'&&gameRunning) useBomb();
-        };
-        const onEnd=(e)=>{
-            e.preventDefault();
-            if(dir==='left'&&touchDir.x===-1) touchDir.x=0;
-            if(dir==='right'&&touchDir.x===1) touchDir.x=0;
-            if(dir==='up'&&touchDir.y===-1) touchDir.y=0;
-            if(dir==='down'&&touchDir.y===1) touchDir.y=0;
-        };
-        btn.addEventListener('touchstart',onStart,{passive:false});
-        btn.addEventListener('touchend',onEnd,{passive:false});
-        btn.addEventListener('mousedown',onStart);
-        btn.addEventListener('mouseup',onEnd);
-        btn.addEventListener('mouseleave',onEnd);
+        const on=(e)=>{e.preventDefault();initAudio();if(dir==='left')touchDir.x=-1;if(dir==='right')touchDir.x=1;if(dir==='fire')shoot();if(dir==='bomb')useBomb();};
+        const off=(e)=>{e.preventDefault();if(dir==='left'&&touchDir.x===-1)touchDir.x=0;if(dir==='right'&&touchDir.x===1)touchDir.x=0;};
+        btn.addEventListener('touchstart',on,{passive:false});
+        btn.addEventListener('touchend',off,{passive:false});
+        btn.addEventListener('mousedown',on);
+        btn.addEventListener('mouseup',off);
+        btn.addEventListener('mouseleave',off);
     }
     setupBtn('leftBtn','left');
     setupBtn('rightBtn','right');
-    setupBtn('upBtn','up');
-    setupBtn('downBtn','down');
     setupBtn('fireBtn','fire');
     setupBtn('bombBtn','bomb');
 
-    // 滑鼠跟隨 Y 軸
-    canvas.addEventListener('mousemove',e=>{
-        if(gameRunning){
-            // 滑鼠控制 Y 座標
-            player.y+=(e.clientY-player.y)*0.15;
-        }
-    });
-
-    // 觸控滑動控制
-    let touchStartX=0,touchStartY=0;
-    canvas.addEventListener('touchstart',e=>{
-        if(!gameRunning) return;
-        const t=e.touches[0];
-        touchStartX=t.clientX;
-        touchStartY=t.clientY;
-    },{passive:true});
-    canvas.addEventListener('touchmove',e=>{
-        if(!gameRunning) return;
-        const t=e.touches[0];
-        player.x+=(t.clientX-touchStartX)*0.5;
-        player.y+=(t.clientY-touchStartY)*0.5;
-        touchStartX=t.clientX;
-        touchStartY=t.clientY;
-    },{passive:true});
+    // 滑鼠跟隨
+    canvas.addEventListener('mousemove',e=>{if(gameRunning)player.y+=(e.clientY-player.y)*0.2;});
 
     gameLoop();
     </script>
