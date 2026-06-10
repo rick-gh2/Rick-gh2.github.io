@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>星輝交織的終焉 | Astra: The Last Horizon</title>
+<style>
+  /* ========================================
+     基礎重置與全域樣式
+     ======================================== */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: linear-gradient(160deg, #0b0f18 0%, #121620 40%, #1a2030 100%);
+    color: #c8d0dc;
+    font-family: 'Noto Sans TC', 'Segoe UI', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 20px;
+    overflow-x: hidden;
+  }
+
+  /* 星星背景動畫 */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image:
+      radial-gradient(1px 1px at 10% 15%, rgba(226,184,66,0.6), transparent),
+      radial-gradient(1px 1px at 25% 35%, rgba(255,255,255,0.4), transparent),
+      radial-gradient(1.5px 1.5px at 40% 10%, rgba(74,144,226,0.5), transparent),
+      radial-gradient(1px 1px at 55% 50%, rgba(255,255,255,0.3), transparent),
+      radial-gradient(1px 1px at 70% 25%, rgba(224,86,253,0.4), transparent),
+      radial-gradient(1.5px 1.5px at 85% 60%, rgba(226,184,66,0.5), transparent),
+      radial-gradient(1px 1px at 15% 75%, rgba(255,255,255,0.3), transparent),
+      radial-gradient(1px 1px at 90% 80%, rgba(74,144,226,0.4), transparent),
+      radial-gradient(1.5px 1.5px at 60% 85%, rgba(226,184,66,0.5), transparent),
+      radial-gradient(1px 1px at 35% 95%, rgba(255,255,255,0.3), transparent);
+    background-size: 200px 200px;
+    animation: twinkle 4s ease-in-out infinite alternate;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  @keyframes twinkle {
+    0% { opacity: 0.6; }
+    100% { opacity: 1; }
+  }
+
+  /* ========================================
+     主容器
+     ======================================== */
+  .game-container {
+    position: relative;
+    z-index: 1;
+    max-width: 700px;
+    width: 100%;
+    margin: 0 auto;
+  }
+
+  /* ========================================
+     標題區域
+     ======================================== */
+  .title-section {
+    text-align: center;
+    padding: 30px 20px 20px;
+  }
+
+  .title-section h1 {
+    font-size: 2rem;
+    color: #e2b842;
+    text-shadow: 0 0 20px rgba(226,184,66,0.4), 0 0 40px rgba(226,184,66,0.2);
+    letter-spacing: 4px;
+    margin-bottom: 6px;
+  }
+
+  .title-section .subtitle {
+    font-size: 0.85rem;
+    color: #4a90e2;
+    text-shadow: 0 0 10px rgba(74,144,226,0.3);
+    letter-spacing: 2px;
+    opacity: 0.8;
+  }
+
+  /* ========================================
+     狀態面板區域
+     ======================================== */
+  .status-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 20px 0;
+  }
+
+  .status-box {
+    background: rgba(13,17,26,0.8);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 16px;
+    backdrop-filter: blur(8px);
+    transition: box-shadow 0.3s;
+  }
+
+  .status-box:hover {
+    box-shadow: 0 0 20px rgba(74,144,226,0.1);
+  }
+
+  .status-box.boss:hover {
+    box-shadow: 0 0 20px rgba(224,86,253,0.1);
+  }
+
+  .status-box h3 {
+    font-size: 0.95rem;
+    margin-bottom: 10px;
+    letter-spacing: 1px;
+  }
+
+  .status-box.player-box h3 { color: #4a90e2; }
+  .status-box.boss h3 { color: #e056fd; }
+
+  .hp-display {
+    margin-bottom: 12px;
+  }
+
+  .hp-bar-container {
+    width: 100%;
+    height: 18px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 9px;
+    overflow: hidden;
+    position: relative;
+    margin-top: 4px;
+  }
+
+  /* 玩家 HP 條（藍綠漸層） */
+  .hp-bar-player {
+    height: 100%;
+    background: linear-gradient(90deg, #4a90e2, #00d4ff);
+    border-radius: 9px;
+    transition: width 0.5s ease, background 0.3s;
+    box-shadow: 0 0 10px rgba(74,144,226,0.4);
+  }
+
+  /* Boss HP 條（紫色漸層） */
+  .hp-bar-boss {
+    height: 100%;
+    background: linear-gradient(90deg, #e056fd, #a855f7);
+    border-radius: 9px;
+    transition: width 0.5s ease;
+    box-shadow: 0 0 10px rgba(224,86,253,0.4);
+  }
+
+  .hp-text {
+    font-size: 0.8rem;
+    color: #8892a4;
+    margin-top: 2px;
+  }
+
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+    padding: 3px 0;
+  }
+
+  .stat-label { color: #6b7588; }
+  .stat-value { color: #e2b842; font-weight: bold; }
+
+  /* ========================================
+     冒險日誌
+     ======================================== */
+  .adventure-log {
+    background: #0d111a;
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 12px;
+    padding: 16px;
+    margin: 20px 0;
+    height: 220px;
+    overflow-y: auto;
+    font-size: 0.85rem;
+    line-height: 1.7;
+    scroll-behavior: smooth;
+  }
+
+  .adventure-log::-webkit-scrollbar { width: 6px; }
+  .adventure-log::-webkit-scrollbar-track { background: transparent; }
+  .adventure-log::-webkit-scrollbar-thumb { background: rgba(74,144,226,0.3); border-radius: 3px; }
+
+  .log-entry {
+    opacity: 0;
+    animation: fadeIn 0.6s forwards;
+    padding: 3px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+  }
+
+  .log-entry:last-child { border-bottom: none; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .log-player { color: #4a90e2; }
+  .log-boss { color: #e056fd; }
+  .log-system { color: #e2b842; }
+  .log-heal { color: #2ecc71; }
+
+  /* ========================================
+     操作按鈕區域
+     ======================================== */
+  .action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 20px 0 30px;
+  }
+
+  .action-btn {
+    padding: 14px 20px;
+    border: none;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-family: 'Noto Sans TC', sans-serif;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    letter-spacing: 1px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .action-btn::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+    transition: left 0.5s;
+  }
+
+  .action-btn:hover::before { left: 100%; }
+
+  /* 訓練按鈕 */
+  .btn-train {
+    background: linear-gradient(135deg, #1a3a5c, #1a2030);
+    color: #4a90e2;
+    border: 1px solid rgba(74,144,226,0.3);
+    text-align: left;
+  }
+  .btn-train:hover:not(:disabled) {
+    box-shadow: 0 0 25px rgba(74,144,226,0.3);
+    transform: translateY(-2px);
+  }
+  .btn-train:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+
+  /* 休息按鈕 */
+  .btn-rest {
+    background: linear-gradient(135deg, #1a3a2a, #1a2030);
+    color: #2ecc71;
+    border: 1px solid rgba(46,204,113,0.3);
+    text-align: left;
+  }
+  .btn-rest:hover:not(:disabled) {
+    box-shadow: 0 0 25px rgba(46,204,113,0.3);
+    transform: translateY(-2px);
+  }
+  .btn-rest:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+
+  /* 挑戰 Boss 按鈕 */
+  .btn-challenge {
+    background: linear-gradient(135deg, #2a1a3a, #1a2030);
+    color: #e056fd;
+    border: 1px solid rgba(224,86,253,0.3);
+    text-align: center;
+    font-size: 1.1rem;
+    font-weight: bold;
+    padding: 18px;
+    letter-spacing: 2px;
+  }
+  .btn-challenge:hover {
+    box-shadow: 0 0 35px rgba(224,86,253,0.4);
+    transform: translateY(-2px);
+  }
+
+  /* ========================================
+     結局覆蓋層
+     ======================================== */
+  .overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(10,12,20,0.85);
+    backdrop-filter: blur(12px);
+    z-index: 100;
+    justify-content: center;
+    align-items: center;
+    animation: overlayIn 0.5s;
+  }
+
+  .overlay.active { display: flex; }
+
+  @keyframes overlayIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .overlay-content {
+    text-align: center;
+    padding: 40px;
+    max-width: 500px;
+    animation: contentIn 0.6s ease-out;
+  }
+
+  @keyframes contentIn {
+    from { transform: scale(0.8); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
+  .overlay-content h2 {
+    font-size: 1.8rem;
+    margin-bottom: 16px;
+    letter-spacing: 3px;
+  }
+
+  .overlay-content .ending-text {
+    font-size: 0.95rem;
+    line-height: 1.8;
+    margin-bottom: 30px;
+    opacity: 0.85;
+  }
+
+  .overlay.victory h2 { color: #e2b842; text-shadow: 0 0 30px rgba(226,184,66,0.4); }
+  .overlay.defeat h2 { color: #e056fd; text-shadow: 0 0 30px rgba(224,86,253,0.4); }
+
+  .btn-restart {
+    padding: 14px 40px;
+    background: linear-gradient(135deg, #1a3a5c, #4a90e2);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-family: 'Noto Sans TC', sans-serif;
+    cursor: pointer;
+    letter-spacing: 2px;
+    transition: all 0.3s;
+  }
+
+  .btn-restart:hover {
+    box-shadow: 0 0 30px rgba(74,144,226,0.5);
+    transform: translateY(-2px);
+  }
+
+  /* ========================================
+     響應式設計
+     ======================================== */
+  @media (max-width: 600px) {
+    .status-section { grid-template-columns: 1fr; }
+    .title-section h1 { font-size: 1.5rem; }
+    .adventure-log { height: 180px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ========================================
+     遊戲主容器
+     ======================================== -->
+<div class="game-container">
+
+  <!-- 標題 -->
+  <div class="title-section">
+    <h1>星輝交織的終焉</h1>
+    <div class="subtitle">ASTRA: THE LAST HORIZON</div>
+  </div>
+
+  <!-- 狀態面板 -->
+  <div class="status-section">
+    <!-- 玩家狀態 -->
+    <div class="status-box player-box">
+      <h3>⚔️ 逐光之刃</h3>
+      <div class="hp-display">
+        <div class="hp-bar-container">
+          <div class="hp-bar-player" id="playerHpBar"></div>
+        </div>
+        <div class="hp-text">HP: <span id="playerHp">100</span> / <span id="playerMaxHp">100</span></div>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">星能攻擊力</span>
+        <span class="stat-value" id="playerAtk">15</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">星辰塵屑</span>
+        <span class="stat-value" id="playerGold">0</span>
+      </div>
+    </div>
+
+    <!-- Boss 狀態 -->
+    <div class="status-box boss">
+      <h3>👑 虛空帝王・阿茲拉爾</h3>
+      <div class="hp-display">
+        <div class="hp-bar-container">
+          <div class="hp-bar-boss" id="bossHpBar"></div>
+        </div>
+        <div class="hp-text">HP: <span id="bossHp">500</span> / <span id="bossMaxHp">500</span></div>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">威脅等級</span>
+        <span class="stat-value" style="color:#e056fd">終焉級</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 冒險日誌 -->
+  <div class="adventure-log" id="adventureLog">
+    <div class="log-entry log-system">
+      ✨ 星辰在深空中顫抖，逐光之刃踏上了終焉之路...
+    </div>
+  </div>
+
+  <!-- 操作按鈕 -->
+  <div class="action-buttons">
+    <button class="action-btn btn-train" id="btnTrain" onclick="doTrain()">
+      ⭐ 感知星辰律動（消耗 10 HP → 獲得 +2 ATK 與 10-20 星辰塵屑）
+    </button>
+    <button class="action-btn btn-rest" id="btnRest" onclick="doRest()">
+      🌿 飲用聖樹泉水（消耗 15 星辰塵屑 → 恢復全部 HP）
+    </button>
+    <button class="action-btn btn-challenge" onclick="doChallenge()">
+      ✨ 直面虛空帝王 ✨
+    </button>
+  </div>
+</div>
+
+<!-- 結局覆蓋層 -->
+<div class="overlay" id="overlay">
+  <div class="overlay-content" id="overlayContent">
+    <h2 id="overlayTitle"></h2>
+    <div class="ending-text" id="overlayText"></div>
+    <button class="btn-restart" onclick="restartGame()">重啟星迴迴圈</button>
+  </div>
+</div>
+
+<script>
+// ========================================
+// 遊戲狀態管理
+// ========================================
+
+// 遊戲狀態物件：儲存所有遊戲變數
+let gameState = {
+  playerHp: 100,       // 玩家目前 HP
+  playerMaxHp: 100,    // 玩家最大 HP
+  playerAtk: 15,       // 玩家星能攻擊力
+  playerGold: 0,       // 星辰塵屑
+  bossHp: 500,         // Boss 目前 HP
+  bossMaxHp: 500,      // Boss 最大 HP
+  isGameOver: false,   // 遊戲是否結束
+  isVictory: false     // 是否勝利
+};
+
+// ========================================
+// 日誌系統
+// 功能：將訊息追加到冒險日誌，並自動捲動到底部
+// ========================================
+function addLog(message, className) {
+  const logContainer = document.getElementById('adventureLog');
+  const entry = document.createElement('div');
+  entry.className = 'log-entry ' + className;
+  entry.textContent = message;
+  logContainer.appendChild(entry);
+  // 自動捲動到最新訊息
+  logContainer.scrollTop = logContainer.scrollHeight;
+}
+
+// ========================================
+// UI 更新函數
+// 功能：同步更新畫面中的所有數值與進度條
+// ========================================
+function updateUI() {
+  // 更新玩家 HP 數值
+  document.getElementById('playerHp').textContent = gameState.playerHp;
+  document.getElementById('playerMaxHp').textContent = gameState.playerMaxHp;
+  document.getElementById('playerAtk').textContent = gameState.playerAtk;
+  document.getElementById('playerGold').textContent = gameState.playerGold;
+
+  // 更新 Boss HP 數值
+  document.getElementById('bossHp').textContent = gameState.bossHp;
+  document.getElementById('bossMaxHp').textContent = gameState.bossMaxHp;
+
+  // 更新 HP 進度條寬度（百分比）
+  const playerHpPercent = Math.max(0, (gameState.playerHp / gameState.playerMaxHp) * 100);
+  document.getElementById('playerHpBar').style.width = playerHpPercent + '%';
+
+  const bossHpPercent = Math.max(0, (gameState.bossHp / gameState.bossMaxHp) * 100);
+  document.getElementById('bossHpBar').style.width = bossHpPercent + '%';
+
+  // 訓練按鈕：如果 HP <= 10 則停用
+  document.getElementById('btnTrain').disabled = gameState.playerHp <= 10 || gameState.isGameOver;
+
+  // 休息按鈕：如果星辰塵屑不足 15 則停用
+  document.getElementById('btnRest').disabled = gameState.playerGold < 15 || gameState.isGameOver;
+
+  // 挑戰按鈕：如果遊戲結束則停用
+  document.getElementById('btnChallenge').style.pointerEvents = 'none';
+}
+
+// ========================================
+// 感知星辰律動（訓練）
+// 功能：消耗 10 HP，獲得 +2 ATK 和隨機 10-20 星辰塵屑
+// ========================================
+function doTrain() {
+  // 防護機制：HP 不足時無法訓練
+  if (gameState.playerHp <= 10 || gameState.isGameOver) return;
+
+  gameState.playerHp -= 10;
+  gameState.playerAtk += 2;
+
+  // 隨機獲得 10-20 星辰塵屑
+  const goldGain = Math.floor(Math.random() * 11) + 10;
+  gameState.playerGold += goldGain;
+
+  addLog(`⚡ 逐光之刃感知星辰律動，星能湧入體內！（+2 星能攻擊力，獲得 ${goldGain} 星辰塵屑）`, 'log-player');
+
+  // 檢查是否因訓練而死亡
+  if (gameState.playerHp <= 0) {
+    gameState.playerHp = 0;
+    showGameOver(false, '星能反噬，逐光之刃在星辰的召喚中化為虛空...');
+  }
+
+  updateUI();
+}
+
+// ========================================
+// 飲用聖樹泉水（休息）
+// 功能：消耗 15 星辰塵屑，完全恢復 HP
+// ========================================
+function doRest() {
+  // 防護機制：星辰塵屑不足或遊戲已結束時無法休息
+  if (gameState.playerGold < 15 || gameState.isGameOver) return;
+
+  gameState.playerGold -= 15;
+  gameState.playerHp = gameState.playerMaxHp;
+
+  addLog(`🌿 聖樹泉水滋潤了逐光之刃的傷口，傷勢完全痊癒！（HP 恢復至 ${gameState.playerMaxHp}）`, 'log-heal');
+  updateUI();
+}
+
+// ========================================
+// 直面虛空帝王（挑戰 Boss）
+// 功能：玩家以 ATK 對 Boss 造成傷害，Boss 回擊固定 25 傷害
+// ========================================
+function doChallenge() {
+  // 防護機制：遊戲已結束時無法挑戰
+  if (gameState.isGameOver) return;
+
+  // 玩家攻擊
+  const playerDamage = gameState.playerAtk;
+  gameState.bossHp -= playerDamage;
+  addLog(`✨ 逐光之刃揮出貫星一擊！對虛空帝王造成 ${playerDamage} 點星能傷害！`, 'log-player');
+
+  // 檢查 Boss 是否被擊敗
+  if (gameState.bossHp <= 0) {
+    gameState.bossHp = 0;
+    showGameOver(true, '在最終的星辰碰撞中，虛空帝王阿茲拉爾的身影逐漸崩解。星輝交織的終焉，化為新世界的曙光。');
+    return;
+  }
+
+  // Boss 反擊（固定 25 傷害）
+  const bossDamage = 25;
+  gameState.playerHp -= bossDamage;
+
+  // Boss 隨機生成不同的攻擊描述
+  const bossAttacks = [
+    `虛空帝王阿茲拉爾揮舞終焉之爪！(${bossDamage} 點虛空傷害)`,
+    `阿茲拉爾釋放深淵吞噬！(${bossDamage} 點虛空傷害)`,
+    `虛空觸手從暗影中襲來！(${bossDamage} 點虛空傷害)`,
+    `阿茲拉爾的終焉怒吼震碎了星能！(${bossDamage} 點虛空傷害)`
+  ];
+  const attackDesc = bossAttacks[Math.floor(Math.random() * bossAttacks.length)];
+  addLog(`👑 ${attackDesc}`, 'log-boss');
+
+  // 檢查玩家是否死亡
+  if (gameState.playerHp <= 0) {
+    gameState.playerHp = 0;
+    showGameOver(false, '逐光之刃倒在阿茲拉爾的終焉之爪下，星辰逐漸黯淡...');
+    return;
+  }
+
+  // 更新日誌顯示 Boss 剩餘 HP
+  addLog(`👑 虛空帝王・阿茲拉爾 剩餘 HP：${gameState.bossHp}`, 'log-boss');
+  updateUI();
+}
+
+// ========================================
+// 遊戲結局顯示
+// 功能：根據勝利或失敗顯示不同的結局畫面
+// ========================================
+function showGameOver(isVictory, endingText) {
+  gameState.isGameOver = true;
+  gameState.isVictory = isVictory;
+
+  const overlay = document.getElementById('overlay');
+  const overlayContent = document.getElementById('overlayContent');
+  const overlayTitle = document.getElementById('overlayTitle');
+  const overlayText = document.getElementById('overlayText');
+
+  if (isVictory) {
+    overlay.className = 'overlay active victory';
+    overlayTitle.textContent = '🌟 終焉之光，照亮新世界';
+    overlayText.textContent = endingText + '\n\n最終數據：星能攻擊力 ' + gameState.playerAtk + ' ｜ 星辰塵屑 ' + gameState.playerGold;
+  } else {
+    overlay.className = 'overlay active defeat';
+    overlayTitle.textContent = '🌑 星辰熄滅，虛空永恆';
+    overlayText.textContent = endingText + '\n\n最終數據：星能攻擊力 ' + gameState.playerAtk + ' ｜ 星辰塵屑 ' + gameState.playerGold;
+  }
+
+  updateUI();
+}
+
+// ========================================
+// 重啟遊戲
+// 功能：重置所有遊戲狀態，清除日誌
+// ========================================
+function restartGame() {
+  // 重置所有狀態變數
+  gameState = {
+    playerHp: 100,
+    playerMaxHp: 100,
+    playerAtk: 15,
+    playerGold: 0,
+    bossHp: 500,
+    bossMaxHp: 500,
+    isGameOver: false,
+    isVictory: false
+  };
+
+  // 清除日誌並重置開頭訊息
+  const logContainer = document.getElementById('adventureLog');
+  logContainer.innerHTML = '<div class="log-entry log-system">✨ 星辰再次點燃，逐光之刃踏上新的一輪終焉之路...</div>';
+
+  // 隱藏結局覆蓋層
+  document.getElementById('overlay').className = 'overlay';
+
+  // 恢復挑戰按鈕的點擊功能
+  document.getElementById('btnChallenge').style.pointerEvents = 'auto';
+
+  updateUI();
+}
+
+// ========================================
+// 初始化：頁面載入時更新 UI
+// ========================================
+updateUI();
+</script>
+</body>
+</html>
