@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chrono Trigger BGM v2 - Crono's Theme</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    background: linear-gradient(135deg, #0a0a2a, #1a0a3e, #0a1a2e);
+    color: #f0f0f5;
+    font-family: 'Noto Sans TC', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+.particles {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none; z-index: 0;
+}
+.container {
+    position: relative; z-index: 1;
+    text-align: center;
+}
+.title {
+    font-size: 2.2rem;
+    background: linear-gradient(135deg, #ffd700, #ff6b9d, #c084fc, #48dbfb);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 8px;
+    text-shadow: 0 0 30px rgba(255,215,0,0.3);
+}
+.subtitle {
+    color: rgba(255,215,0,0.6);
+    font-size: 0.95rem;
+    margin-bottom: 40px;
+    font-style: italic;
+}
+.btn {
+    background: linear-gradient(135deg, rgba(255,215,0,0.1), rgba(255,107,157,0.1));
+    border: 1px solid rgba(255,215,0,0.3);
+    color: #ffd700;
+    padding: 18px 52px;
+    border-radius: 50px;
+    font-size: 1.15rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    backdrop-filter: blur(10px);
+}
+.btn:hover {
+    background: linear-gradient(135deg, rgba(255,215,0,0.25), rgba(255,107,157,0.2));
+    transform: scale(1.05);
+    box-shadow: 0 0 30px rgba(255,215,0,0.2);
+}
+.btn.playing {
+    background: linear-gradient(135deg, rgba(255,215,0,0.3), rgba(255,107,157,0.25));
+    border-color: rgba(255,215,0,0.6);
+    animation: pulse 2s infinite;
+}
+@keyframes pulse {
+    0%, 100% { box-shadow: 0 0 10px 0 rgba(255,215,0,0.3); }
+    50% { box-shadow: 0 0 40px 15px rgba(255,215,0,0.15); }
+}
+.eq {
+    display: flex; gap: 6px; justify-content: center; margin-top: 30px;
+    height: 40px; opacity: 0; transition: opacity 0.5s;
+}
+.eq.on { opacity: 1; }
+.bar {
+    width: 8px; background: linear-gradient(to top, #ffd700, #ff6b9d);
+    border-radius: 4px; animation: bounce 0.8s infinite alternate;
+}
+.bar:nth-child(1) { height: 20px; animation-delay: 0s; }
+.bar:nth-child(2) { height: 30px; animation-delay: 0.1s; }
+.bar:nth-child(3) { height: 15px; animation-delay: 0.2s; }
+.bar:nth-child(4) { height: 35px; animation-delay: 0.3s; }
+.bar:nth-child(5) { height: 25px; animation-delay: 0.4s; }
+.bar:nth-child(6) { height: 18px; animation-delay: 0.5s; }
+.bar:nth-child(7) { height: 28px; animation-delay: 0.6s; }
+.bar:nth-child(8) { height: 22px; animation-delay: 0.7s; }
+@keyframes bounce { from { transform: scaleY(0.3); } to { transform: scaleY(1.2); } }
+.info {
+    margin-top: 25px; color: rgba(255,255,255,0.3); font-size: 0.8rem;
+}
+</style>
+</head>
+<body>
+<canvas class="particles" id="particles"></canvas>
+<div class="container">
+    <div class="title">⚔️ Chrono Trigger BGM v2</div>
+    <div class="subtitle">Crono's Theme - 克洛諾斯主題 (參考 RPGamer MIDI 版)</div>
+    <button class="btn" id="playBtn" onclick="toggleMusic()">▶ 播放音樂</button>
+    <div class="eq" id="eq">
+        <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+        <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+    </div>
+    <div class="info">Based on Yasunori Mitsuda's original composition</div>
+</div>
+<script>
+let musicCtx = null, musicPlaying = false, musicLoopId = null;
+
+// === Crono's Theme 旋律 (B小調，參考 MIDI 原版節奏) ===
+// 經典開頭：G→A→B→C#→B→A→G... 向上爬升的英雄式旋律
+const CT = {
+    // 主旋律 - Crono 的英雄主題 (B minor)
+    melody: [
+        // Phrase 1: 經典開頭 "Crono's Theme" - 爬升式上行
+        [308.73,329.63,369.99,415.30,369.99,329.63,308.73,261.63],  // G4 A4 B4 C#5 B4 A4 G4 E4
+        // Phrase 2: 回旋下行
+        [293.66,329.63,369.99,440.00,369.99,329.63,293.66,261.63],  // D4 E4 F#4 A4 F#4 E4 D4 E4
+        // Phrase 3: 高潮爬升
+        [329.63,369.99,415.30,493.88,440.00,369.99,329.63,369.99],  // A4 B4 C#5 D#5 C#5 B4 A4 B4
+        // Phrase 4: 解決
+        [415.30,369.99,329.63,293.66,329.63,369.99,415.30,329.63],  // E4 D#4 E4 D4 E4 F#4 G4 E4
+        // Phrase 5: 副旋律變化
+        [493.88,440.00,369.99,329.63,261.63,293.66,329.63,369.99],  // B4 A4 F#4 E4 E3 D4 E4 F#4
+        // Phrase 6: 高潮
+        [415.30,493.88,440.00,369.99,329.63,369.99,440.00,493.88],  // E4 B4 A4 F#4 E4 B4 A4 B4
+        // Phrase 7: 回落
+        [440.00,392.00,349.23,329.63,293.66,329.63,369.99,329.63],  // A4 G4 E4 D4 D4 E4 F#4 E4
+        // Phrase 8: 解決回到主音
+        [329.63,369.99,415.30,493.88,587.33,440.00,369.99,329.63]   // A4 B4 C#5 D#5 G#5 A4 F#4 E4
+    ],
+    // 和弦進行 - 經典 RPG 和聲
+    // i - VII - VI - V progression (小調進行)
+    chords: [
+        { bass: [155.56, 155.56], arp: [[246.94,293.66,369.99],[246.94,293.66,369.99],[246.94,293.66,369.99],[246.94,293.66,369.99]] },  // Gm
+        { bass: [130.81, 130.81], arp: [[196.00,246.94,329.63],[196.00,246.94,329.63],[196.00,246.94,329.63],[196.00,246.94,329.63]] },  // Eb
+        { bass: [146.83, 146.83], arp: [[220.00,261.63,329.63],[220.00,261.63,329.63],[220.00,261.63,329.63],[220.00,261.63,329.63]] },  // Dm
+        { bass: [110.00, 110.00], arp: [[164.81,196.00,246.94],[164.81,196.00,246.94],[164.81,196.00,246.94],[164.81,196.00,246.94]] },  // Cm
+        { bass: [155.56, 155.56], arp: [[246.94,293.66,369.99],[246.94,293.66,369.99],[246.94,293.66,369.99],[246.94,293.66,369.99]] },
+        { bass: [130.81, 130.81], arp: [[196.00,246.94,329.63],[196.00,246.94,329.63],[196.00,246.94,329.63],[196.00,246.94,329.63]] },
+        { bass: [110.00, 110.00], arp: [[164.81,196.00,246.94],[164.81,196.00,246.94],[164.81,196.00,246.94],[164.81,196.00,246.94]] },
+        { bass: [110.00, 110.00], arp: [[164.81,196.00,246.94],[164.81,196.00,246.94],[164.81,196.00,246.94],[164.81,196.00,246.94]] }
+    ],
+    // 低音旋律
+    bass: [
+        [155.56, 155.56, 155.56, 155.56],
+        [130.81, 130.81, 130.81, 130.81],
+        [146.83, 146.83, 146.83, 146.83],
+        [110.00, 110.00, 110.00, 110.00],
+        [155.56, 155.56, 155.56, 155.56],
+        [130.81, 130.81, 130.81, 130.81],
+        [110.00, 110.00, 110.00, 110.00],
+        [110.00, 110.00, 110.00, 110.00]
+    ]
+};
+
+function playNote(ctx, parent, type, freq, start, dur, vol) {
+    const osc = ctx.createOscillator(), g = ctx.createGain();
+    osc.type = type; osc.frequency.value = freq;
+    g.gain.setValueAtTime(0, start);
+    g.gain.linearRampToValueAtTime(vol, start+0.005);
+    g.gain.exponentialRampToValueAtTime(0.001, start+dur*0.9);
+    osc.connect(g).connect(parent);
+    osc.start(start); osc.stop(start+dur);
+}
+
+function playCTBGM() {
+    if (!musicPlaying) return;
+    const ctx = musicCtx || new (window.AudioContext||window.webkitAudioContext)();
+    if (!musicCtx) musicCtx = ctx;
+    const now = ctx.currentTime, loopDur = 24, beat = loopDur/40;
+    const master = ctx.createGain();
+    master.gain.value = 0.16;
+    master.connect(ctx.destination);
+
+    // === 主旋律（方波 - 經典 16-bit RPG 音色）===
+    const mLoop = CT.melody;
+    for (let bar = 0; bar < 2; bar++) {
+        const barOff = bar * loopDur;
+        for (let i = 0; i < mLoop[bar].length; i++) {
+            playNote(ctx, master, 'square', mLoop[bar][i], now+barOff+i*beat, beat*0.8, 0.09);
+        }
+    }
+
+    // === 副旋律（八度音，三角波輕和聲）===
+    for (let bar = 0; bar < 2; bar++) {
+        const barOff = bar * loopDur;
+        for (let i = 0; i < mLoop[bar].length; i++) {
+            playNote(ctx, master, 'triangle', mLoop[bar][i] * 0.5, now+barOff+i*beat, beat*0.7, 0.03);
+        }
+    }
+
+    // === 貝斯（方波 - 深沉脈動）===
+    for (let bar = 0; bar < 2; bar++) {
+        const barOff = bar * loopDur;
+        for (let i = 0; i < CT.bass[bar].length; i++) {
+            playNote(ctx, master, 'square', CT.bass[bar][i], now+barOff+i*beat*5, beat*4.5, 0.10);
+            // 八度下移
+            playNote(ctx, master, 'sine', CT.bass[bar][i]/2, now+barOff+i*beat*5, beat*4, 0.06);
+        }
+    }
+
+    // === 琶音和弦（方波分解和弦）===
+    for (let bar = 0; bar < 2; bar++) {
+        const chord = CT.chords[bar];
+        for (let i = 0; i < 4; i++) {
+            chord.arp.forEach(freq => {
+                playNote(ctx, master, 'square', freq, now+bar*loopDur+i*beat*10, beat*8, 0.02);
+            });
+        }
+    }
+
+    // === 節奏（電子節拍）===
+    for (let i = 0; i < 16; i++) {
+        const t = now + i * beat * 2.5;
+        if (i % 4 === 0) playNote(ctx, master, 'sine', 60, t, 0.1, 0.10);  // kick
+        if (i % 8 === 4) {
+            const bufSize = ctx.sampleRate * 0.06;
+            const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+            const data = buf.getChannelData(0);
+            for (let s = 0; s < bufSize; s++) data[s] = (Math.random()*2-1)*0.5;
+            const src = ctx.createBufferSource(); src.buffer = buf;
+            const g = ctx.createGain(); g.gain.setValueAtTime(0.05,t);
+            g.gain.exponentialRampToValueAtTime(0.001, t+0.06);
+            src.connect(g).connect(master); src.start(t);
+        }
+        playNote(ctx, master, 'square', 9000+Math.random()*3000, t+beat*1.25, 0.015, 0.012);
+    }
+
+    // === 氛圍鋪底（LFO 掃描低通濾波）===
+    for (let bar = 0; bar < 2; bar++) {
+        const chord = CT.chords[bar];
+        for (let i = 0; i < 4; i++) {
+            const t = now + bar*loopDur + i*beat*6;
+            const osc = ctx.createOscillator();
+            const g = ctx.createGain();
+            const filter = ctx.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.value = 300 + Math.sin(bar*0.5+i)*200;
+            filter.Q.value = 4;
+            osc.type = 'sine';
+            osc.frequency.value = chord.bass[0]/2;
+            g.gain.setValueAtTime(0,t);
+            g.gain.linearRampToValueAtTime(0.015,t+1);
+            g.gain.setValueAtTime(0.015,t+loopDur/2-1);
+            g.gain.linearRampToValueAtTime(0,t+loopDur/2);
+            osc.connect(filter).connect(g).connect(master);
+            osc.start(t); osc.stop(t+loopDur/2);
+        }
+    }
+
+    musicLoopId = setTimeout(playCTBGM, loopDur*1000);
+}
+
+function toggleMusic() {
+    const btn = document.getElementById('playBtn'), eq = document.getElementById('eq');
+    if (!musicPlaying) {
+        if (!musicCtx) musicCtx = new (window.AudioContext||window.webkitAudioContext)();
+        musicPlaying = true;
+        btn.textContent = '⏸ 停止音樂';
+        btn.classList.add('playing');
+        eq.classList.add('on');
+        playCTBGM();
+    } else {
+        musicPlaying = false;
+        btn.textContent = '▶ 播放音樂';
+        btn.classList.remove('playing');
+        eq.classList.remove('on');
+        clearTimeout(musicLoopId);
+    }
+}
+
+// Particles
+const canvas = document.getElementById('particles');
+const c = canvas.getContext('2d');
+canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+const pts = Array.from({length:60}, () => ({
+    x: Math.random()*canvas.width, y: Math.random()*canvas.height,
+    vx: (Math.random()-0.5)*0.3, vy: (Math.random()-0.5)*0.3,
+    r: Math.random()*1.5+0.5,
+    hue: Math.random()*60+30  // golden hue
+}));
+function drawP() {
+    c.clearRect(0,0,canvas.width,canvas.height);
+    pts.forEach(p => {
+        p.x += p.vx; p.y += p.vy;
+        if(p.x<0) p.x=canvas.width; if(p.x>canvas.width) p.x=0;
+        if(p.y<0) p.y=canvas.height; if(p.y>canvas.height) p.y=0;
+        c.beginPath(); c.arc(p.x,p.y,p.r,0,Math.PI*2);
+        c.fillStyle = `hsla(${p.hue},80%,70%,${0.15+Math.random()*0.25})`;
+        c.fill();
+    });
+    requestAnimationFrame(drawP);
+}
+drawP();
+</script>
+</body>
+</html>
