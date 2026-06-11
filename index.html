@@ -428,7 +428,7 @@
     <div class="glow-orb g4"></div>
 
     <!-- 音樂控制按鈕 -->
-    <button class="music-toggle paused" id="musicBtn" onclick="toggleMusic()" title="Chrono Trigger BGM 🎵">
+    <button class="music-toggle paused" id="musicBtn" onclick="toggleMusic()" title="⚔️ Crono's Theme v2 🎵">
         <span class="bar"></span>
         <span class="bar"></span>
         <span class="bar"></span>
@@ -544,119 +544,136 @@
 
     <script>
     // ====== 科技風背景音樂 ======
-    let musicCtx = null;
-    let musicPlaying = false;
-    let musicLoopId = null;
+    let musicCtx = null, musicPlaying = false, musicLoopId = null;
 
-    // === Chrono Trigger 風格像素 RPG BGM (16-bit Adventure) ===
-    // 經典超時空之鑰配樂風格：輕快的冒险旋律 + 8-bit 方波 + 三角波貝斯 + 琶音和弦
-
+    // === Crono's Theme 旋律 (B小調 - 參考 RPGamer MIDI 原版) ===
+    // 經典開頭：G→A→B→C#→B→A→G... 向上爬升的英雄式旋律
     const CT = {
-        // 旋律（類似超時空之鑰的明亮冒险旋律）
+        // 主旋律 - Crono 的英雄主題 (B minor)
         melody: [
-            // 樂句 1: 輕快上行旋律
-            [329.63,392.00,440.00,523.25,440.00,392.00,329.63,261.63],
-            [293.66,349.23,392.00,440.00,523.25,587.33,523.25,440.00],
-            // 樂句 2: 回旋下行
-            [392.00,349.23,329.63,293.66,261.63,293.66,329.63,349.23],
-            [329.63,293.66,261.63,246.94,261.63,293.66,329.63,392.00],
-            // 樂句 3: 高潮段落
-            [523.25,659.25,587.33,523.25,440.00,493.88,523.25,587.33],
-            [659.25,783.99,698.46,659.25,523.25,587.33,523.25,440.00],
-            // 樂句 4: 解決
-            [392.00,440.00,523.25,587.33,523.25,440.00,392.00,349.23],
-            [329.63,349.23,392.00,440.00,523.25,440.00,329.63,261.63]
+            [308.73,329.63,369.99,415.30,369.99,329.63,308.73,261.63],
+            [293.66,329.63,369.99,440.00,369.99,329.63,293.66,261.63],
+            [329.63,369.99,415.30,493.88,440.00,369.99,329.63,369.99],
+            [415.30,369.99,329.63,293.66,329.63,369.99,415.30,329.63],
+            [493.88,440.00,369.99,329.63,261.63,293.66,329.63,369.99],
+            [415.30,493.88,440.00,369.99,329.63,369.99,440.00,493.88],
+            [440.00,392.00,349.23,329.63,293.66,329.63,369.99,329.63],
+            [329.63,369.99,415.30,493.88,587.33,440.00,369.99,329.63]
         ],
-        // 貝斯（三角波）
-        bass: [130.81,130.81,164.81,164.81,196.00,196.00,174.61,174.61],
-        // 琶音和弦（方波）
-        arpChords: [
-            [261.63,329.63,392.00],  // C
-            [196.00,246.94,329.63],  // G
-            [220.00,261.63,329.63],  // A
-            [174.61,220.00,261.63],  // F
-            [196.00,246.94,329.63],  // G
-            [164.81,196.00,246.94],  // E
-            [146.83,196.00,220.00],  // D
-            [174.61,220.00,261.63]   // F
+        // 和弦進行 - 經典 RPG 和聲 i-VII-VI-V
+        chords: [
+            { bass: [155.56,155.56], arp: [[246.94,293.66,369.99],[246.94,293.66,369.99],[246.94,293.66,369.99],[246.94,293.66,369.99]] },
+            { bass: [130.81,130.81], arp: [[196.00,246.94,329.63],[196.00,246.94,329.63],[196.00,246.94,329.63],[196.00,246.94,329.63]] },
+            { bass: [146.83,146.83], arp: [[220.00,261.63,329.63],[220.00,261.63,329.63],[220.00,261.63,329.63],[220.00,261.63,329.63]] },
+            { bass: [110.00,110.00], arp: [[164.81,196.00,246.94],[164.81,196.00,246.94],[164.81,196.00,246.94],[164.81,196.00,246.94]] },
+            { bass: [155.56,155.56], arp: [[246.94,293.66,369.99],[246.94,293.66,369.99],[246.94,293.66,369.99],[246.94,293.66,369.99]] },
+            { bass: [130.81,130.81], arp: [[196.00,246.94,329.63],[196.00,246.94,329.63],[196.00,246.94,329.63],[196.00,246.94,329.63]] },
+            { bass: [110.00,110.00], arp: [[164.81,196.00,246.94],[164.81,196.00,246.94],[164.81,196.00,246.94],[164.81,196.00,246.94]] },
+            { bass: [110.00,110.00], arp: [[164.81,196.00,246.94],[164.81,196.00,246.94],[164.81,196.00,246.94],[164.81,196.00,246.94]] }
+        ],
+        bass: [
+            [155.56,155.56,155.56,155.56],[130.81,130.81,130.81,130.81],
+            [146.83,146.83,146.83,146.83],[110.00,110.00,110.00,110.00],
+            [155.56,155.56,155.56,155.56],[130.81,130.81,130.81,130.81],
+            [110.00,110.00,110.00,110.00],[110.00,110.00,110.00,110.00]
         ]
     };
 
     function playNote(ctx, parent, type, freq, start, dur, vol) {
-        const osc = ctx.createOscillator();
-        osc.type = type;
-        osc.frequency.value = freq;
-        const g = ctx.createGain();
+        const osc = ctx.createOscillator(), g = ctx.createGain();
+        osc.type = type; osc.frequency.value = freq;
         g.gain.setValueAtTime(0, start);
-        g.gain.linearRampToValueAtTime(vol, start + 0.005);
-        g.gain.exponentialRampToValueAtTime(0.001, start + dur * 0.85);
+        g.gain.linearRampToValueAtTime(vol, start+0.005);
+        g.gain.exponentialRampToValueAtTime(0.001, start+dur*0.9);
         osc.connect(g).connect(parent);
-        osc.start(start);
-        osc.stop(start + dur);
+        osc.start(start); osc.stop(start+dur);
     }
 
     function playCTBGM() {
         if (!musicPlaying) return;
-        const ctx = musicCtx || new (window.AudioContext || window.webkitAudioContext)();
+        const ctx = musicCtx || new (window.AudioContext||window.webkitAudioContext)();
         if (!musicCtx) musicCtx = ctx;
-        const now = ctx.currentTime;
-        const loopDur = 20; // 20秒循環
-        const beat = loopDur / 32; // 32拍
+        const now = ctx.currentTime, loopDur = 24, beat = loopDur/40;
         const master = ctx.createGain();
-        master.gain.value = 0.18;
+        master.gain.value = 0.16;
         master.connect(ctx.destination);
 
-        // === 旋律（方波 - 經典 8-bit 音色）===
+        // 主旋律（方波 - 經典 16-bit RPG 音色）
         const mLoop = CT.melody;
-        for (let bar = 0; bar < 2; bar++) { // 重複一次
-            const barOff = bar * loopDur;
-            for (let i = 0; i < mLoop[bar].length; i++) {
-                const freq = mLoop[bar][i];
-                const t = now + barOff + i * beat;
-                playNote(ctx, master, 'square', freq, t, beat * 0.85, 0.10);
+        for (let bar=0;bar<2;bar++) {
+            const barOff = bar*loopDur;
+            for (let i=0;i<mLoop[bar].length;i++) {
+                playNote(ctx,master,'square',mLoop[bar][i],now+barOff+i*beat,beat*0.8,0.09);
             }
         }
 
-        // === 貝斯（三角波）===
-        for (let bar = 0; bar < 2; bar++) {
-            const barOff = bar * loopDur;
-            for (let i = 0; i < CT.bass.length; i++) {
-                const freq = CT.bass[i];
-                const t = now + barOff + i * beat * 2;
-                playNote(ctx, master, 'triangle', freq, t, beat * 1.8, 0.12);
+        // 副旋律（八度音，三角波輕和聲）
+        for (let bar=0;bar<2;bar++) {
+            const barOff = bar*loopDur;
+            for (let i=0;i<mLoop[bar].length;i++) {
+                playNote(ctx,master,'triangle',mLoop[bar][i]*0.5,now+barOff+i*beat,beat*0.7,0.03);
             }
         }
 
-        // === 琶音和弦（方波輕背景）===
-        for (let bar = 0; bar < 2; bar++) {
-            const barOff = bar * loopDur;
-            const chord = CT.arpChords[bar];
-            for (let beat_i = 0; beat_i < 8; beat_i++) {
-                chord.forEach((freq, ci) => {
-                    const t = now + barOff + (bar * CT.arpChords[bar].length + beat_i * 4 + ci) * beat * 0.5;
-                    if (t < now + loopDur) {
-                        playNote(ctx, master, 'square', freq, t, beat * 0.3, 0.025);
-                    }
+        // 貝斯（方波+正弦波八度下移）
+        for (let bar=0;bar<2;bar++) {
+            const barOff = bar*loopDur;
+            for (let i=0;i<CT.bass[bar].length;i++) {
+                playNote(ctx,master,'square',CT.bass[bar][i],now+barOff+i*beat*5,beat*4.5,0.10);
+                playNote(ctx,master,'sine',CT.bass[bar][i]/2,now+barOff+i*beat*5,beat*4,0.06);
+            }
+        }
+
+        // 琶音和弦
+        for (let bar=0;bar<2;bar++) {
+            const chord = CT.chords[bar];
+            for (let i=0;i<4;i++) {
+                chord.arp.forEach(freq => {
+                    playNote(ctx,master,'square',freq,now+bar*loopDur+i*beat*10,beat*8,0.02);
                 });
             }
         }
 
-        // === 節奏：輕快木琴錘音（高頻方波點綴）===
-        const drumNotes = [880,1046.5,1174.66,1318.5];
-        for (let i = 0; i < 16; i++) {
-            const t = now + i * beat * 2;
-            const freq = drumNotes[i % drumNotes.length];
-            playNote(ctx, master, 'square', freq, t, beat * 0.25, 0.04);
+        // 節奏
+        for (let i=0;i<16;i++) {
+            const t = now+i*beat*2.5;
+            if(i%4===0) playNote(ctx,master,'sine',60,t,0.1,0.10);
+            if(i%8===4) {
+                const bufSize=ctx.sampleRate*0.06;
+                const buf=ctx.createBuffer(1,bufSize,ctx.sampleRate);
+                const data=buf.getChannelData(0);
+                for(let s=0;s<bufSize;s++) data[s]=(Math.random()*2-1)*0.5;
+                const src=ctx.createBufferSource(); src.buffer=buf;
+                const g=ctx.createGain(); g.gain.setValueAtTime(0.05,t);
+                g.gain.exponentialRampToValueAtTime(0.001,t+0.06);
+                src.connect(g).connect(master); src.start(t);
+            }
+            playNote(ctx,master,'square',9000+Math.random()*3000,t+beat*1.25,0.015,0.012);
         }
 
-        musicLoopId = setTimeout(playCTBGM, loopDur * 1000);
+        // 氛圍鋪底（LFO 掃描低通濾波）
+        for (let bar=0;bar<2;bar++) {
+            const chord=CT.chords[bar];
+            for (let i=0;i<4;i++) {
+                const t=now+bar*loopDur+i*beat*6;
+                const osc=ctx.createOscillator(), g=ctx.createGain(), filter=ctx.createBiquadFilter();
+                filter.type='lowpass'; filter.frequency.value=300+Math.sin(bar*0.5+i)*200; filter.Q.value=4;
+                osc.type='sine'; osc.frequency.value=chord.bass[0]/2;
+                g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(0.015,t+1);
+                g.gain.setValueAtTime(0.015,t+loopDur/2-1); g.gain.linearRampToValueAtTime(0,t+loopDur/2);
+                osc.connect(filter).connect(g).connect(master);
+                osc.start(t); osc.stop(t+loopDur/2);
+            }
+        }
+
+        musicLoopId = setTimeout(playCTBGM, loopDur*1000);
     }
 
     function toggleMusic() {
         const btn = document.getElementById('musicBtn');
         if (!musicPlaying) {
-            if (!musicCtx) musicCtx = new (window.AudioContext || window.webkitAudioContext)();
-            if (musicCtx.state === 'suspended') musicCtx.resume();
+            if (!musicCtx) musicCtx = new (window.AudioContext||window.webkitAudioContext)();
+            if (musicCtx.state==='suspended') musicCtx.resume();
             musicPlaying = true;
             btn.classList.remove('paused');
             btn.classList.add('playing');
@@ -671,15 +688,7 @@
     }
 
     document.addEventListener('click', function initMusic() {
-        if (!musicPlaying) {
-            toggleMusic();
-            const hint = document.createElement('div');
-            hint.className = 'music-hint';
-            hint.textContent = '🎵 Chrono Trigger 風格 BGM 🎮 · 右上角按鈕可控制';
-            document.body.appendChild(hint);
-            setTimeout(() => hint.remove(), 2800);
-        }
-        document.removeEventListener('click', initMusic);
+        if (!musicPlaying) { toggleMusic(); }
     });
 
     // ====== 粒子背景 ======
