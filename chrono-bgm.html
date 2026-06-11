@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chrono Trigger BGM - 超時空之鑰配樂</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    background: linear-gradient(135deg, #0a0a1a, #1a0a2e, #0a1a2e);
+    color: #f0f0f5;
+    font-family: 'Noto Sans TC', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+.particles {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none; z-index: 0;
+}
+.container {
+    position: relative; z-index: 1;
+    text-align: center;
+}
+.title {
+    font-size: 2rem;
+    background: linear-gradient(135deg, #ff6b9d, #c084fc, #48dbfb, #feca57);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 10px;
+}
+.subtitle {
+    color: rgba(255,255,255,0.5);
+    font-size: 0.9rem;
+    margin-bottom: 40px;
+}
+.btn {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: white;
+    padding: 16px 48px;
+    border-radius: 50px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    backdrop-filter: blur(10px);
+}
+.btn:hover {
+    background: rgba(255,255,255,0.2);
+    transform: scale(1.05);
+}
+.btn.playing {
+    background: rgba(192,132,252,0.3);
+    border-color: rgba(192,132,252,0.5);
+    animation: pulse 2s infinite;
+}
+@keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(192,132,252,0.3); }
+    50% { box-shadow: 0 0 30px 10px rgba(192,132,252,0.2); }
+}
+.eq {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    margin-top: 30px;
+    height: 40px;
+    opacity: 0;
+    transition: opacity 0.5s;
+}
+.eq.on { opacity: 1; }
+.bar {
+    width: 8px;
+    background: linear-gradient(to top, #ff6b9d, #c084fc);
+    border-radius: 4px;
+    animation: bounce 0.8s infinite alternate;
+}
+.bar:nth-child(1) { height: 20px; animation-delay: 0s; }
+.bar:nth-child(2) { height: 30px; animation-delay: 0.1s; }
+.bar:nth-child(3) { height: 15px; animation-delay: 0.2s; }
+.bar:nth-child(4) { height: 35px; animation-delay: 0.3s; }
+.bar:nth-child(5) { height: 25px; animation-delay: 0.4s; }
+.bar:nth-child(6) { height: 18px; animation-delay: 0.5s; }
+.bar:nth-child(7) { height: 28px; animation-delay: 0.6s; }
+.bar:nth-child(8) { height: 22px; animation-delay: 0.7s; }
+@keyframes bounce {
+    from { transform: scaleY(0.3); }
+    to { transform: scaleY(1.2); }
+}
+</style>
+</head>
+<body>
+<canvas class="particles" id="particles"></canvas>
+<div class="container">
+    <div class="title">🎮 Chrono Trigger BGM</div>
+    <div class="subtitle">超時空之鑰風格像素 RPG 配樂</div>
+    <button class="btn" id="playBtn" onclick="toggleMusic()">▶ 播放音樂</button>
+    <div class="eq" id="eq">
+        <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+        <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+    </div>
+</div>
+<script>
+let musicCtx = null, musicPlaying = false, musicLoopId = null;
+
+const CT = {
+    melody: [
+        [329.63,392.00,440.00,523.25,440.00,392.00,329.63,261.63],
+        [293.66,349.23,392.00,440.00,523.25,587.33,523.25,440.00],
+        [392.00,349.23,329.63,293.66,261.63,293.66,329.63,349.23],
+        [329.63,293.66,261.63,246.94,261.63,293.66,329.63,392.00],
+        [523.25,659.25,587.33,523.25,440.00,493.88,523.25,587.33],
+        [659.25,783.99,698.46,659.25,523.25,587.33,523.25,440.00],
+        [392.00,440.00,523.25,587.33,523.25,440.00,392.00,349.23],
+        [329.63,349.23,392.00,440.00,523.25,440.00,329.63,261.63]
+    ],
+    bass: [130.81,130.81,164.81,164.81,196.00,196.00,174.61,174.61],
+    arpChords: [
+        [261.63,329.63,392.00],[196.00,246.94,329.63],[220.00,261.63,329.63],
+        [174.61,220.00,261.63],[196.00,246.94,329.63],[164.81,196.00,246.94],
+        [146.83,196.00,220.00],[174.61,220.00,261.63]
+    ]
+};
+
+function playNote(ctx, parent, type, freq, start, dur, vol) {
+    const osc = ctx.createOscillator(), g = ctx.createGain();
+    osc.type = type; osc.frequency.value = freq;
+    g.gain.setValueAtTime(0, start);
+    g.gain.linearRampToValueAtTime(vol, start+0.005);
+    g.gain.exponentialRampToValueAtTime(0.001, start+dur*0.85);
+    osc.connect(g).connect(parent);
+    osc.start(start); osc.stop(start+dur);
+}
+
+function playCTBGM() {
+    if (!musicPlaying) return;
+    const ctx = musicCtx || new (window.AudioContext||window.webkitAudioContext)();
+    if (!musicCtx) musicCtx = ctx;
+    const now = ctx.currentTime, loopDur = 20, beat = loopDur/32;
+    const master = ctx.createGain();
+    master.gain.value = 0.18;
+    master.connect(ctx.destination);
+
+    const mLoop = CT.melody;
+    for (let bar=0;bar<2;bar++) {
+        const barOff = bar*loopDur;
+        for (let i=0;i<mLoop[bar].length;i++) {
+            playNote(ctx, master, 'square', mLoop[bar][i], now+barOff+i*beat, beat*0.85, 0.10);
+        }
+    }
+    for (let bar=0;bar<2;bar++) {
+        const barOff = bar*loopDur;
+        for (let i=0;i<CT.bass.length;i++) {
+            playNote(ctx, master, 'triangle', CT.bass[i], now+barOff+i*beat*2, beat*1.8, 0.12);
+        }
+    }
+    for (let bar=0;bar<2;bar++) {
+        const barOff = bar*loopDur;
+        const chord = CT.arpChords[bar];
+        for (let bi=0;bi<8;bi++) {
+            chord.forEach((f,ci) => {
+                const t = now+barOff+(bar*chord.length+bi*4+ci)*beat*0.5;
+                if (t < now+loopDur) playNote(ctx, master, 'square', f, t, beat*0.3, 0.025);
+            });
+        }
+    }
+    const drumNotes = [880,1046.5,1174.66,1318.5];
+    for (let i=0;i<16;i++) {
+        playNote(ctx, master, 'square', drumNotes[i%4], now+i*beat*2, beat*0.25, 0.04);
+    }
+    musicLoopId = setTimeout(playCTBGM, loopDur*1000);
+}
+
+function toggleMusic() {
+    const btn = document.getElementById('playBtn'), eq = document.getElementById('eq');
+    if (!musicPlaying) {
+        if (!musicCtx) musicCtx = new (window.AudioContext||window.webkitAudioContext)();
+        musicPlaying = true;
+        btn.textContent = '⏸ 停止音樂';
+        btn.classList.add('playing');
+        eq.classList.add('on');
+        playCTBGM();
+    } else {
+        musicPlaying = false;
+        btn.textContent = '▶ 播放音樂';
+        btn.classList.remove('playing');
+        eq.classList.remove('on');
+        clearTimeout(musicLoopId);
+    }
+}
+
+// Particles background
+const canvas = document.getElementById('particles');
+const c = canvas.getContext('2d');
+canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+const pts = Array.from({length:80}, () => ({
+    x: Math.random()*canvas.width, y: Math.random()*canvas.height,
+    vx: (Math.random()-0.5)*0.5, vy: (Math.random()-0.5)*0.5,
+    r: Math.random()*2+1
+}));
+function drawP() {
+    c.clearRect(0,0,canvas.width,canvas.height);
+    pts.forEach(p => {
+        p.x += p.vx; p.y += p.vy;
+        if(p.x<0) p.x=canvas.width; if(p.x>canvas.width) p.x=0;
+        if(p.y<0) p.y=canvas.height; if(p.y>canvas.height) p.y=0;
+        c.beginPath(); c.arc(p.x,p.y,p.r,0,Math.PI*2);
+        c.fillStyle = 'rgba(192,132,252,'+(0.2+Math.random()*0.3)+')';
+        c.fill();
+    });
+    requestAnimationFrame(drawP);
+}
+drawP();
+</script>
+</body>
+</html>
