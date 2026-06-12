@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="version" content="3.0-bright">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rick Yeh 的個人空間 ✨</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #f0f4f8;
+            --bg-card: rgba(255, 255, 255, 0.85);
+            --border-card: rgba(255, 255, 255, 0.9);
+            --text-primary: #1a202c;
+            --text-secondary: rgba(26, 32, 44, 0.65);
+            --accent-1: #3b82f6;
+            --accent-2: #8b5cf6;
+            --accent-3: #06b6d4;
+            --accent-4: #f59e0b;
+            --accent-5: #10b981;
+            --glow-1: rgba(59, 130, 246, 0.3);
+            --glow-2: rgba(139, 92, 246, 0.3);
+            --shadow-soft: 0 4px 20px rgba(0,0,0,0.06);
+            --shadow-hover: 0 12px 40px rgba(0,0,0,0.12);
+            --radius: 20px;
+        }
+
+        body {
+            font-family: 'Noto Sans TC', 'Space Grotesk', 'Microsoft JhengHei', sans-serif;
+            background: linear-gradient(135deg, #f0f4f8 0%, #e8f0fe 50%, #f5f0ff 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+            position: relative;
+            color: var(--text-primary);
+        }
+
+        /* 柔和背景裝飾 */
+        .bg-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.4;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .bg-orb.g1 { top: -100px; left: -50px; width: 400px; height: 400px; background: var(--glow-1); animation: orbFloat1 20s ease-in-out infinite; }
+        .bg-orb.g2 { bottom: -150px; right: -80px; width: 450px; height: 450px; background: var(--glow-2); animation: orbFloat2 22s ease-in-out infinite; }
+        .bg-orb.g3 { top: 30%; right: 10%; width: 350px; height: 350px; background: rgba(16, 185, 129, 0.25); animation: orbFloat3 25s ease-in-out infinite; }
+        .bg-orb.g4 { top: 60%; left: 5%; width: 300px; height: 300px; background: rgba(245, 158, 11, 0.2); animation: orbFloat4 18s ease-in-out infinite; }
+
+        @keyframes orbFloat1 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(80px,60px)} }
+        @keyframes orbFloat2 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-80px,-70px)} }
+        @keyframes orbFloat3 { 0%,100%{transform:translate(-50%,-50%) scale(1)} 50%{transform:translate(-40%,-60%) scale(1.1)} }
+        @keyframes orbFloat4 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(50px,40px)} }
+
+        /* 音樂控制 */
+        .music-toggle {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            z-index: 100;
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.6);
+            background: rgba(255,255,255,0.7);
+            backdrop-filter: blur(12px) saturate(1.3);
+            cursor: pointer;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            color: var(--text-primary);
+            box-shadow: var(--shadow-soft);
+        }
+        .music-toggle:hover {
+            background: rgba(255,255,255,0.9);
+            box-shadow: var(--shadow-hover);
+            transform: scale(1.08);
+        }
+        .music-toggle .bar {
+            display: inline-block;
+            width: 3px;
+            margin: 0 1.5px;
+            height: 18px;
+            background: var(--accent-1);
+            border-radius: 2px;
+            animation: barPulse 0.55s ease-in-out infinite alternate;
+        }
+        .music-toggle.paused .bar { animation: none; height: 4px; opacity: 0.35; }
+
+        @keyframes barPulse { from { height: 6px; } to { height: 20px; } }
+
+        /* Header */
+        .header {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            margin-bottom: 48px;
+            margin-top: 20px;
+        }
+        .header-emoji {
+            font-size: 3.5rem;
+            display: block;
+            margin-bottom: 12px;
+            animation: headerBounce 2.5s ease-in-out infinite;
+        }
+        @keyframes headerBounce {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-10px) scale(1.05); }
+        }
+        .title {
+            font-size: clamp(2rem, 5vw, 3.2rem);
+            font-weight: 900;
+            letter-spacing: -0.02em;
+            line-height: 1.2;
+            background: linear-gradient(135deg, var(--accent-1), var(--accent-2), var(--accent-3), var(--accent-4), var(--accent-5), var(--accent-1));
+            background-size: 400% 400%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradientShift 6s ease infinite;
+            margin-bottom: 14px;
+        }
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: clamp(0.95rem, 2vw, 1.15rem);
+            font-weight: 300;
+            letter-spacing: 0.04em;
+            animation: fadeUp 1s ease 0.3s both;
+            position: relative;
+            display: inline-block;
+        }
+        .subtitle::after {
+            content: '';
+            display: inline-block;
+            width: 2px;
+            height: 1.1em;
+            background: var(--accent-3);
+            margin-left: 4px;
+            vertical-align: middle;
+            animation: blink 0.9s step-end infinite;
+        }
+        @keyframes blink { 50% { opacity: 0; } }
+        @keyframes fadeUp { from { transform: translateY(18px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        /* Nav Grid */
+        .nav-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            max-width: 880px;
+            width: calc(100% - 40px);
+            position: relative;
+            z-index: 1;
+        }
+        .nav-card {
+            position: relative;
+            background: var(--bg-card);
+            backdrop-filter: blur(20px) saturate(1.2);
+            -webkit-backdrop-filter: blur(20px) saturate(1.2);
+            border: 1px solid var(--border-card);
+            border-radius: var(--radius);
+            padding: 36px 24px 32px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+            text-decoration: none;
+            color: var(--text-primary);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            min-height: 170px;
+            isolation: isolate;
+            box-shadow: var(--shadow-soft);
+        }
+        .nav-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(59, 130, 246, 0.3);
+            box-shadow: var(--shadow-hover), 0 0 30px var(--glow-1);
+        }
+        .nav-card > * { position: relative; z-index: 1; }
+
+        /* Per-card accent */
+        .nav-card[data-accent="rose"]    { --card-glow: rgba(255,107,157,0.15); --ring-color: rgba(255,107,157,0.2); }
+        .nav-card[data-accent="purple"]   { --card-glow: rgba(139,92,246,0.15); --ring-color: rgba(139,92,246,0.2); }
+        .nav-card[data-accent="cyan"]     { --card-glow: rgba(6,182,212,0.15); --ring-color: rgba(6,182,212,0.2); }
+        .nav-card[data-accent="yellow"]   { --card-glow: rgba(245,158,11,0.15); --ring-color: rgba(245,158,11,0.2); }
+        .nav-card[data-accent="pink"]     { --card-glow: rgba(236,72,153,0.15); --ring-color: rgba(236,72,153,0.2); }
+        .nav-card[data-accent="green"]    { --card-glow: rgba(16,185,129,0.15); --ring-color: rgba(16,185,129,0.2); }
+        .nav-card[data-accent="orange"]   { --card-glow: rgba(249,115,22,0.15); --ring-color: rgba(249,115,22,0.2); }
+        .nav-card[data-accent="blue"]     { --card-glow: rgba(59,130,246,0.15); --ring-color: rgba(59,130,246,0.2); }
+        .nav-card[data-accent="teal"]     { --card-glow: rgba(20,184,166,0.15); --ring-color: rgba(20,184,166,0.2); }
+
+        .card-icon-wrap {
+            width: 68px;
+            height: 68px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+            position: relative;
+            transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+            background: var(--ring-color, rgba(59,130,246,0.12));
+        }
+        .nav-card:hover .card-icon-wrap { transform: scale(1.12); }
+
+        .nav-card .emoji { font-size: 1.8rem; position: relative; z-index: 1; line-height: 1; }
+        .nav-card .label { font-size: 1.15rem; font-weight: 700; margin-bottom: 6px; letter-spacing: 0.01em; }
+        .nav-card .desc { font-size: 0.82rem; color: var(--text-secondary); font-weight: 300; letter-spacing: 0.02em; }
+
+        .nav-card .card-arrow {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(59,130,246,0.08);
+            margin-top: 14px;
+            font-size: 0.9rem;
+            opacity: 0;
+            transform: translateX(-8px);
+            transition: all 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .nav-card:hover .card-arrow { opacity: 0.8; transform: translateX(0); background: rgba(59,130,246,0.15); }
+
+        /* Footer */
+        .footer {
+            position: fixed;
+            bottom: 28px;
+            color: var(--text-secondary);
+            font-size: 0.82rem;
+            z-index: 1;
+            font-weight: 300;
+            letter-spacing: 0.05em;
+        }
+
+        /* 卡片進入動畫 */
+        .nav-card { opacity: 0; transform: translateY(30px); }
+        .nav-card.visible { animation: cardIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+        @keyframes cardIn { to { opacity: 1; transform: translateY(0); } }
+
+        /* 響應式 */
+        @media (max-width: 900px) {
+            .nav-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+            .nav-card { padding: 30px 18px 28px; min-height: 155px; }
+            .card-icon-wrap { width: 58px; height: 58px; }
+            .nav-card .emoji { font-size: 1.6rem; }
+        }
+        @media (max-width: 640px) {
+            .nav-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; width: calc(100% - 28px); }
+            .nav-card { padding: 28px 16px 26px; min-height: 145px; }
+            .card-icon-wrap { width: 52px; height: 52px; margin-bottom: 12px; }
+            .nav-card .emoji { font-size: 1.5rem; }
+            .nav-card .label { font-size: 1.05rem; }
+            .nav-card .desc { font-size: 0.78rem; }
+            .header { margin-bottom: 36px; }
+            .header-emoji { font-size: 2.8rem; }
+        }
+    </style>
+</head>
+<body>
+    <!-- 背景裝飾 -->
+    <div class="bg-orb g1"></div>
+    <div class="bg-orb g2"></div>
+    <div class="bg-orb g3"></div>
+    <div class="bg-orb g4"></div>
+
+    <!-- 音樂按鈕 -->
+    <button class="music-toggle paused" id="musicBtn" onclick="toggleMusic()" title="🎵 Cron's Theme v3">
+        <span class="bar"></span>
+        <span class="bar"></span>
+        <span class="bar"></span>
+        <span class="bar"></span>
+    </button>
+
+    <div class="header">
+        <span class="header-emoji">✨</span>
+        <h1 class="title">Rick Yeh 的個人空間</h1>
+        <p class="subtitle">探索 · 創造 · 超越</p>
+    </div>
+
+    <div class="nav-grid">
+        <a href="date.html" class="nav-card" data-accent="rose">
+            <div class="card-icon-wrap"><span class="emoji">💎</span></div>
+            <div class="label">日期計算機</div>
+            <div class="desc">快速日期計算工具...</div>
+            <span class="card-arrow">→</span>
+        </a>
+        <a href="space.html" class="nav-card" data-accent="cyan">
+            <div class="card-icon-wrap"><span class="emoji">🚀</span></div>
+            <div class="label">太空探索中心</div>
+            <div class="desc">探索宇宙的奧秘</div>
+            <span class="card-arrow">→</span>
+        </a>
+        <a href="takoyaki.html" class="nav-card" data-accent="orange">
+            <div class="card-icon-wrap"><span class="emoji">🐙</span></div>
+            <div class="label">章魚燒愛好者</div>
+            <div class="desc">章魚燒食譜大全</div>
+            <span class="card-arrow">→</span>
+        </a>
+        <a href="airforce.html" class="nav-card" data-accent="purple">
+            <div class="card-icon-wrap"><span class="emoji">✈️</span></div>
+            <div class="label">空軍博物館</div>
+            <div class="desc">航空歷史與科技</div>
+            <span class="card-arrow">→</span>
+        </a>
+        <a href="sorry.html" class="nav-card" data-accent="green">
+            <div class="card-icon-wrap"><span class="emoji">🎲</span></div>
+            <div class="label">大富翁遊戲</div>
+            <div class="desc">經典桌遊線上版</div>
+            <span class="card-arrow">→</span>
+        </a>
+        <a href="guestbook.html" class="nav-card" data-accent="pink">
+            <div class="card-icon-wrap"><span class="emoji">📝</span></div>
+            <div class="label">留言版</div>
+            <div class="desc">留下你的想法</div>
+            <span class="card-arrow">→</span>
+        </a>
+        <a href="dino-game.html" class="nav-card" data-accent="yellow">
+            <div class="card-icon-wrap"><span class="emoji">🦖</span></div>
+            <div class="label">恐龍遊戲</div>
+            <div class="desc">經典Chrome遊戲重製</div>
+            <span class="card-arrow">→</span>
+        </a>
+        <a href="tower-defense.html" class="nav-card" data-accent="red" style="--card-glow: rgba(239,68,68,0.15); --ring-color: rgba(239,68,68,0.2);">
+            <div class="card-icon-wrap"><span class="emoji">🏰</span></div>
+            <div class="label">塔防大作戰</div>
+            <div class="desc">策略防禦遊戲</div>
+            <span class="card-arrow">→</span>
+        </a>
+        <a href="videos.html" class="nav-card" data-accent="blue">
+            <div class="card-icon-wrap"><span class="emoji">🎬</span></div>
+            <div class="label">AI 作品集</div>
+            <div class="desc">AI 創作作品展示</div>
+            <span class="card-arrow">→</span>
+        </a>
+    </div>
+
+    <div class="footer">Powered by ✨ Rick Yeh &amp; GitHub Pages</div>
+
+    <script>
+    // === 音樂控制器 ===
+    let musicCtx = null, musicPlaying = false, musicLoopId = null;
+
+    // === 背景粒子動畫 ===
+    const canvas = document.getElementById('particles') || document.createElement('canvas');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    canvas.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;';
+    document.body.prepend(canvas);
+
+    const pCtx = canvas.getContext('2d');
+    let particles = [];
+    let mouse = { x: null, y: null };
+
+    function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    window.addEventListener('mousemove', e => {
+        mouse.x = e.clientX;
+        mouse.y = e.clientY;
+    });
+
+    class Particle {
+        constructor() {
+            this.x = Math.random() * canvas.width;
+            this.y = Math.random() * canvas.height;
+            this.size = Math.random() * 2 + 0.5;
+            this.speedX = (Math.random() - 0.5) * 0.8;
+            this.speedY = (Math.random() - 0.5) * 0.8;
+            this.opacity = Math.random() * 0.5 + 0.2;
+            this.color = `hsla(${Math.random() * 360}, 70%, 70%)`;
+        }
+        update() {
+            this.x += this.speedX;
+            this.y += this.speedY;
+            if (this.x < 0 || this.x > canvas.width) this.speedX *= -1;
+            if (this.y < 0 || this.y > canvas.height) this.speedY *= -1;
+            if (mouse.x !== null) {
+                const dx = mouse.x - this.x;
+                const dy = mouse.y - this.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < 120) { this.x -= dx * 0.02; this.y -= dy * 0.02; }
+            }
+        }
+        draw() {
+            pCtx.beginPath();
+            pCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            pCtx.fillStyle = this.color;
+            pCtx.globalAlpha = this.opacity;
+            pCtx.fill();
+            pCtx.globalAlpha = 1;
+        }
+    }
+
+    for (let i = 0; i < 80; i++) { particles.push(new Particle()); }
+
+    function connectParticles() {
+        for (let i = 0; i < particles.length; i++) {
+            for (let j = i + 1; j < particles.length; j++) {
+                const dx = particles[i].x - particles[j].x;
+                const dy = particles[i].y - particles[j].y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < 100) {
+                    pCtx.beginPath();
+                    pCtx.strokeStyle = `rgba(59,130,246,${0.12 * (1 - dist / 100)})`;
+                    pCtx.lineWidth = 0.5;
+                    pCtx.moveTo(particles[i].x, particles[i].y);
+                    pCtx.lineTo(particles[j].x, particles[j].y);
+                    pCtx.stroke();
+                }
+            }
+        }
+    }
+
+    function animate() {
+        pCtx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => { p.update(); p.draw(); });
+        connectParticles();
+        requestAnimationFrame(animate);
+    }
+    animate();
+
+    // === 卡片進入動畫 ===
+    const cards = document.querySelectorAll('.nav-card');
+    cards.forEach((card, i) => {
+        setTimeout(() => { card.classList.add('visible'); }, 100 + i * 80);
+    });
+
+    // === 音樂控制（使用 Web Audio API 合成科技風音樂）===
+    function toggleMusic() {
+        const btn = document.getElementById('musicBtn');
+        if (!musicPlaying) {
+            if (!musicCtx) musicCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (musicCtx.state === 'suspended') musicCtx.resume();
+            musicPlaying = true;
+            btn.classList.remove('paused');
+            playTechMusic();
+        } else {
+            musicPlaying = false;
+            if (musicCtx) musicCtx.suspend();
+            clearTimeout(musicLoopId);
+            btn.classList.remove('playing');
+            btn.classList.add('paused');
+        }
+    }
+
+    function playNote(ctx, parent, type, freq, start, dur, vol) {
+        const osc = ctx.createOscillator(), g = ctx.createGain();
+        osc.type = type; osc.frequency.value = freq;
+        g.gain.setValueAtTime(start, start);
+        g.gain.linearRampToValueAtTime(vol, start + 0.005);
+        g.gain.exponentialRampToValueAtTime(0.001, start + dur * 0.9);
+        osc.connect(g).connect(parent);
+        osc.start(start); osc.stop(start + dur);
+    }
+
+    function playTechMusic() {
+        if (!musicPlaying) return;
+        const ctx = musicCtx || new (window.AudioContext || window.webkitAudioContext)();
+        if (!musicCtx) musicCtx = ctx;
+        const now = ctx.currentTime, loopDur = 30, beat = loopDur / 50;
+        const master = ctx.createGain();
+        master.gain.value = 0.15;
+        master.connect(ctx.destination);
+
+        // 科技風音樂 - 合成器節奏
+        const melody = [
+            [440, 523.25, 659.25, 783.99, 659.25, 523.25, 440, 392],
+            [493.88, 587.33, 698.46, 880, 698.46, 587.33, 493.88, 440],
+            [523.25, 659.25, 783.99, 987.77, 880, 659.25, 523.25, 659.25],
+            [783.99, 659.25, 523.25, 440, 523.25, 659.25, 783.99, 523.25]
+        ];
+
+        for (let bar = 0; bar < 2; bar++) {
+            const barOff = bar * loopDur;
+            for (let i = 0; i < melody[bar].length; i++) {
+                playNote(ctx, master, 'sawtooth', melody[bar][i], now + barOff + i * beat, beat * 0.8, 0.08);
+            }
+        }
+
+        // 低頻 bass line
+        for (let bar = 0; bar < 4; bar++) {
+            playNote(ctx, master, 'sine', 110 + bar * 20, now + bar * loopDur / 2, loopDur / 2 - 0.5, 0.12);
+        }
+
+        // 電子音效
+        for (let i = 0; i < 8; i++) {
+            const t = now + i * beat * 6;
+            playNote(ctx, master, 'square', 880 + Math.random() * 400, t, beat * 0.3, 0.03);
+        }
+
+        // 琶音效果
+        for (let bar = 0; bar < 2; bar++) {
+            for (let i = 0; i < 4; i++) {
+                playNote(ctx, master, 'triangle', 880 + (i * 165), now + bar * loopDur + i * beat * 4, beat * 2, 0.05);
+            }
+        }
+
+        musicLoopId = setTimeout(playTechMusic, loopDur * 1000);
+    }
+    </script>
+</body>
+</html>
